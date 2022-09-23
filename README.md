@@ -1,2 +1,3 @@
 # turto
-ssg built with deno
+
+Building a personal SSG using Deno!
