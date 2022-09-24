@@ -1,5 +1,6 @@
 import { Reader } from "./reader.ts";
 import { readDirRecursive } from "../utils/file.ts";
+import { Asset } from "../entities/asset.ts";
 
 export class AssetReader extends Reader {
   constructor(src: string) {
@@ -7,6 +8,9 @@ export class AssetReader extends Reader {
   }
 
   read() {
-    console.log(readDirRecursive(this.dir));
+    return readDirRecursive(this.dir)
+      .map((pathRelative) => {
+        return new Asset(this.dir, pathRelative);
+      });
   }
 }

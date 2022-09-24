@@ -30,7 +30,7 @@ export class Site {
   }
 
   read() {
-    this.assetReader.read();
+    this.assets = this.assetReader.read();
   }
 }
 
