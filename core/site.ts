@@ -1,22 +1,27 @@
-import { Page } from "./page.ts"
-import { Asset } from "./asset.ts"
-import { Layout } from "./layout.ts"
+import { Page } from "./entities/page.ts"
+import { Asset } from "./entities/asset.ts"
+import { Layout } from "./entities/layout.ts"
+
 import { Renderer } from "./renderer.ts"
+
+import { AssetReader } from "./readers/asset-reader.ts"
 
 export class Site {
   options: SiteOptions
 
-  pages: Page[]
-  assets: Asset[]
-  layouts: Layout[]
+  pages: Page[] = []
+  assets: Asset[] = []
+  layouts: Layout[] = []
+
+  assetReader: AssetReader
 
   renderer: Renderer
 
   constructor(options?: Partial<SiteOptions>) {
     this.options = {...defaultSiteOptions, ...options}
-    this.pages = []
-    this.assets = []
-    this.layouts = []
+
+    this.assetReader = new AssetReader(this.options.src)
+
     this.renderer = new Renderer()
   }
 
@@ -25,6 +30,7 @@ export class Site {
   }
 
   read() {
+    this.assetReader.read()
   }
 }
 
