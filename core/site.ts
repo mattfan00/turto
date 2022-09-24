@@ -1,47 +1,47 @@
-import { Page } from "./entities/page.ts"
-import { Asset } from "./entities/asset.ts"
-import { Layout } from "./entities/layout.ts"
+import { Page } from "./entities/page.ts";
+import { Asset } from "./entities/asset.ts";
+import { Layout } from "./entities/layout.ts";
 
-import { Renderer } from "./renderer.ts"
+import { Renderer } from "./renderer.ts";
 
-import { AssetReader } from "./readers/asset-reader.ts"
+import { AssetReader } from "./readers/asset-reader.ts";
 
 export class Site {
-  options: SiteOptions
+  options: SiteOptions;
 
-  pages: Page[] = []
-  assets: Asset[] = []
-  layouts: Layout[] = []
+  pages: Page[] = [];
+  assets: Asset[] = [];
+  layouts: Layout[] = [];
 
-  assetReader: AssetReader
+  assetReader: AssetReader;
 
-  renderer: Renderer
+  renderer: Renderer;
 
   constructor(options?: Partial<SiteOptions>) {
-    this.options = {...defaultSiteOptions, ...options}
+    this.options = { ...defaultSiteOptions, ...options };
 
-    this.assetReader = new AssetReader(this.options.src)
+    this.assetReader = new AssetReader(this.options.src);
 
-    this.renderer = new Renderer()
+    this.renderer = new Renderer();
   }
 
   generate() {
-    this.read()
+    this.read();
   }
 
   read() {
-    this.assetReader.read()
+    this.assetReader.read();
   }
 }
 
 export interface SiteOptions {
   /** Base directory to read from */
-  src: string
+  src: string;
   /** Directory where site will be generated */
-  dest: string
+  dest: string;
 }
 
 const defaultSiteOptions: SiteOptions = {
   src: "./",
-  dest: "./public"
-}
+  dest: "./public",
+};
