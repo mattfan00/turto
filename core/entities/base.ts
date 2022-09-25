@@ -4,7 +4,7 @@ import { path } from "../deps.ts";
  * Base class that all entities extend from. Handles file information.
  */
 export class Base {
-  /** Full path relative to `Deno.cwd()` */
+  /** Full path */
   path: string;
   /** Base directory the file was read from */
   baseDir: string;

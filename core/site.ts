@@ -6,6 +6,7 @@ import { Renderer } from "./renderer.ts";
 
 import { AssetReader } from "./readers/asset-reader.ts";
 import { PageReader } from "./readers/page-reader.ts";
+import { LayoutReader } from "./readers/layout-reader.ts";
 
 export class Site {
   options: SiteOptions;
@@ -16,16 +17,18 @@ export class Site {
 
   assetReader: AssetReader;
   pageReader: PageReader;
+  layoutReader: LayoutReader;
 
   renderer: Renderer;
 
   constructor(options?: Partial<SiteOptions>) {
     this.options = { ...defaultSiteOptions, ...options };
 
+    this.renderer = new Renderer();
+
     this.assetReader = new AssetReader(this.options.src);
     this.pageReader = new PageReader(this.options.src);
-
-    this.renderer = new Renderer();
+    this.layoutReader = new LayoutReader(this.options.src, this.renderer);
   }
 
   generate() {
@@ -35,11 +38,12 @@ export class Site {
   read() {
     this.assets = this.assetReader.read();
     this.pages = this.pageReader.read();
+    this.layouts = this.layoutReader.read();
   }
 }
 
 export interface SiteOptions {
-  /** Base directory to read from */
+  /** Base directory where files are located */
   src: string;
   /** Directory where site will be generated */
   dest: string;
