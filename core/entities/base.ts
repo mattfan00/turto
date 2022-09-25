@@ -16,6 +16,7 @@ export class Base {
   base: string;
   /** File extension */
   ext: string;
+  /** Unmodified utf8 encoded string content of file */
   rawContent?: string;
 
   constructor(baseDir: string, pathRelative: string) {

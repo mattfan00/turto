@@ -8,7 +8,9 @@ export const logDuration = (name: string) => {
   const start = cache.get(name);
   if (!start) throw new Error(`"${name}" has not been tracked`);
 
-  const time = duration(cache.get(name)!, performance.now());
+  const end = performance.now();
+  const time = duration(cache.get(name)!, end);
+
   console.log(`Execution time of "${name}": ${format(time)}`);
 };
 

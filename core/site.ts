@@ -5,6 +5,7 @@ import { Layout } from "./entities/layout.ts";
 import { Renderer } from "./renderer.ts";
 
 import { AssetReader } from "./readers/asset-reader.ts";
+import { PageReader } from "./readers/page-reader.ts";
 
 export class Site {
   options: SiteOptions;
@@ -14,6 +15,7 @@ export class Site {
   layouts: Layout[] = [];
 
   assetReader: AssetReader;
+  pageReader: PageReader;
 
   renderer: Renderer;
 
@@ -21,6 +23,7 @@ export class Site {
     this.options = { ...defaultSiteOptions, ...options };
 
     this.assetReader = new AssetReader(this.options.src);
+    this.pageReader = new PageReader(this.options.src);
 
     this.renderer = new Renderer();
   }
@@ -31,6 +34,7 @@ export class Site {
 
   read() {
     this.assets = this.assetReader.read();
+    this.pages = this.pageReader.read();
   }
 }
 

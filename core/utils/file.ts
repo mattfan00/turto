@@ -28,3 +28,12 @@ export const readDirRecursive = (
 
   return files;
 };
+
+/**
+ * Returns a list of all the directories in a path
+ */
+export const listDirs = (p: string) => {
+  return path.dirname(p)
+    .split("/")
+    .filter((s) => s !== "." && s !== "");
+};
