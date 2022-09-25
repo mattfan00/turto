@@ -1,3 +1,5 @@
+import { path } from "./deps.ts";
+
 import { Page } from "./entities/page.ts";
 import { Asset } from "./entities/asset.ts";
 import { Layout } from "./entities/layout.ts";
@@ -26,9 +28,9 @@ export class Site {
 
     this.renderer = new Renderer();
 
-    this.assetReader = new AssetReader(this.options.src);
-    this.pageReader = new PageReader(this.options.src);
-    this.layoutReader = new LayoutReader(this.options.src, this.renderer);
+    this.assetReader = new AssetReader(this.getSrc());
+    this.pageReader = new PageReader(this.getSrc());
+    this.layoutReader = new LayoutReader(this.getSrc(), this.renderer);
   }
 
   generate() {
@@ -40,16 +42,27 @@ export class Site {
     this.pages = this.pageReader.read();
     this.layouts = this.layoutReader.read();
   }
+
+  getSrc() {
+    return path.join(this.options.base, this.options.src);
+  }
+
+  getDest() {
+    return path.join(this.options.base, this.options.dest);
+  }
 }
 
 export interface SiteOptions {
-  /** Base directory where files are located */
+  /** Current working directory */
+  base: string;
+  /** Directory relative to base where files are located */
   src: string;
-  /** Directory where site will be generated */
+  /** Directory relative to base where site will be generated */
   dest: string;
 }
 
 const defaultSiteOptions: SiteOptions = {
+  base: Deno.cwd(),
   src: "./",
   dest: "./public",
 };
