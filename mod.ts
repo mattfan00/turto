@@ -2,14 +2,14 @@ import { Site } from "./core/site.ts";
 import * as perf from "./core/utils/perf.ts";
 
 const start = () => {
-  perf.track("generate-site");
+  perf.track("build-site");
 
   const site = new Site({
     src: "./example",
   });
-  site.generate();
+  site.build();
 
-  perf.logDuration("generate-site");
+  perf.logDuration("build-site");
 };
 
 start();

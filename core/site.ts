@@ -33,7 +33,7 @@ export class Site {
     this.layoutReader = new LayoutReader(this.getSrc(), this.renderer);
   }
 
-  generate() {
+  build() {
     this.read();
   }
 
