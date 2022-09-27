@@ -10,6 +10,8 @@ export class Base {
   baseDir: string;
   /** Relative to the base directory */
   pathRelative: string;
+  /** Directory name of `pathRelative` */
+  dir: string;
   /** Filename without extension */
   name: string;
   /** Full filename */
@@ -25,6 +27,7 @@ export class Base {
     this.path = path.join(baseDir, pathRelative);
     this.baseDir = baseDir;
     this.pathRelative = pathRelative;
+    this.dir = parsedPath.dir;
     this.name = parsedPath.name;
     this.base = parsedPath.base;
     this.ext = parsedPath.ext;
