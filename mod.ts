@@ -6,6 +6,7 @@ const start = () => {
 
   const site = new Site({
     src: "./example",
+    dest: "./example/public",
   });
   site.build();
 

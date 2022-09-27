@@ -9,6 +9,7 @@ import { Renderer } from "./renderer.ts";
 import { AssetReader } from "./readers/asset-reader.ts";
 import { PageReader } from "./readers/page-reader.ts";
 import { LayoutReader } from "./readers/layout-reader.ts";
+import { Writer } from "./writer.ts";
 
 export class Site {
   options: SiteOptions;
@@ -22,11 +23,13 @@ export class Site {
   layoutReader: LayoutReader;
 
   renderer: Renderer;
+  writer: Writer;
 
   constructor(options?: Partial<SiteOptions>) {
     this.options = { ...defaultSiteOptions, ...options };
 
     this.renderer = new Renderer();
+    this.writer = new Writer(this.getDest());
 
     this.assetReader = new AssetReader(this.getSrc());
     this.pageReader = new PageReader(this.getSrc());
@@ -34,13 +37,19 @@ export class Site {
   }
 
   build() {
+    this.writer.initDest();
     this.read();
+    this.write();
   }
 
   read() {
     this.assets = this.assetReader.read();
     this.pages = this.pageReader.read();
     this.layouts = this.layoutReader.read();
+  }
+
+  write() {
+    this.writer.copyAssets(this.assets);
   }
 
   getSrc() {
