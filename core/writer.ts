@@ -1,5 +1,5 @@
 import { fs, path } from "./deps.ts";
-import { Asset } from "./entities/asset.ts"
+import { Asset } from "./entities/asset.ts";
 import { ASSETS_DIRNAME, PAGES_DIRNAME } from "./utils/constants.ts";
 
 export class Writer {
@@ -19,15 +19,19 @@ export class Writer {
   }
 
   copyAssets(assets: Asset[]) {
-    assets.forEach(asset => {
-      Deno.mkdirSync(
-        path.join(this.destAssets, asset.dir),
-        { recursive: true }
-      );
+    const createdDirs = new Set<string>();
+
+    assets.forEach((asset) => {
+      const newDir = path.join(this.destAssets, asset.dir);
+      if (!createdDirs.has(newDir)) {
+        Deno.mkdirSync(newDir, { recursive: true });
+        createdDirs.add(newDir);
+      }
+
       Deno.copyFileSync(
         asset.path,
         path.join(this.destAssets, asset.pathRelative),
       );
-    })
+    });
   }
 }

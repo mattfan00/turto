@@ -1,4 +1,4 @@
-import { nunjucks, dayjs } from "./deps.ts";
+import { dayjs, nunjucks } from "./deps.ts";
 
 export class Renderer {
   engine: nunjucks.Environment;
@@ -21,4 +21,4 @@ export class Renderer {
 
 const formatDate = (date: dayjs.Dayjs, formatStr: string) => {
   return date.format(formatStr);
-}
+};
