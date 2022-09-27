@@ -1,5 +1,6 @@
 import { Reader } from "./reader.ts";
 import { readDirRecursive } from "../utils/file.ts";
+import { LAYOUTS_DIRNAME } from "../utils/constants.ts";
 import { Layout } from "../entities/layout.ts";
 import { Renderer } from "../renderer.ts";
 import { path } from "../deps.ts";
@@ -8,7 +9,7 @@ export class LayoutReader extends Reader {
   renderer: Renderer;
 
   constructor(src: string, renderer: Renderer) {
-    super(src, "layouts");
+    super(src, LAYOUTS_DIRNAME);
     this.renderer = renderer;
   }
 
