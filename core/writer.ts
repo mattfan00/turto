@@ -4,6 +4,7 @@ import { Page } from "./entities/page.ts";
 import { Renderer } from "./renderer.ts";
 import { ASSETS_DIRNAME } from "./utils/constants.ts";
 import { appendName } from "./utils/file.ts";
+import type { Object } from "./utils/types.ts";
 
 
 export class Writer {
@@ -38,7 +39,7 @@ export class Writer {
     });
   }
 
-  writePages(pages: Page[], renderer: Renderer) {
+  writePages(pages: Page[], renderer: Renderer, siteData: Object) {
     pages.forEach((page) => {
       const destDir = appendName(path.join(this.dest, page.dir), page.name);
 
@@ -48,9 +49,8 @@ export class Writer {
       }
 
       const generatedHTML = renderer.render(page.layout, {
-        page: {
-          ...page
-        },
+        page: page.convertToData(),
+        site: siteData,
       })
 
       Deno.writeTextFileSync(path.join(destDir, "index.html"), generatedHTML)

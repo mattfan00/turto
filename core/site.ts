@@ -1,5 +1,6 @@
 import { path } from "./deps.ts";
 
+import { Convert } from "./entities/base.ts";
 import { Page } from "./entities/page.ts";
 import { Asset } from "./entities/asset.ts";
 import { Layout } from "./entities/layout.ts";
@@ -11,7 +12,7 @@ import { PageReader } from "./readers/page-reader.ts";
 import { LayoutReader } from "./readers/layout-reader.ts";
 import { Writer } from "./writer.ts";
 
-export class Site {
+export class Site implements Convert {
   options: SiteOptions;
 
   pages: Page[] = [];
@@ -50,7 +51,7 @@ export class Site {
 
   write() {
     this.writer.writeAssets(this.assets);
-    this.writer.writePages(this.pages, this.renderer);
+    this.writer.writePages(this.pages, this.renderer, this.convertToData());
   }
 
   getSrc() {
@@ -59,6 +60,21 @@ export class Site {
 
   getDest() {
     return path.join(this.options.base, this.options.dest);
+  }
+
+  convertToData() {
+    const convertedPages = [...this.pages]
+      .sort((a, b)=> {
+        const bTime = b.date ? b.date.unix() : 0;
+        const aTime = a.date ? a.date.unix() : 0;
+
+        return bTime - aTime;
+      })
+      .map(page => page.convertToData());
+
+    return {
+      pages: convertedPages,
+    }
   }
 }
 

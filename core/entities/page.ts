@@ -1,4 +1,4 @@
-import { Base } from "./base.ts";
+import { Base, Convert } from "./base.ts";
 import { listDirs, appendName } from "../utils/file.ts";
 import {
   path,
@@ -6,7 +6,7 @@ import {
   frontmatter,
 } from "../deps.ts";
 
-export class Page extends Base {
+export class Page extends Base implements Convert {
   title: string;
   /** Unprocessed contents of body from markdown */
   body: string;
@@ -44,6 +44,17 @@ export class Page extends Base {
     this.categories = categories || listDirs(this.pathRelative);
     this.url = url || appendName(path.join("/", this.dir), this.name);
     this.attrs = attrs;
+  }
+
+  convertToData() {
+    return {
+      title: this.title,
+      layout: this.layout,
+      date: this.date,
+      categories: this.categories,
+      url: this.url,
+      attrs: this.attrs,
+    }
   }
 }
 

@@ -1,4 +1,9 @@
 import { path } from "../deps.ts";
+import type { Object } from "../utils/types.ts";
+
+export interface Convert {
+  convertToData: () => Object;
+}
 
 /**
  * Base class that all entities extend from. Handles file information.
