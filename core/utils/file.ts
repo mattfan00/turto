@@ -30,10 +30,24 @@ export const readDirRecursive = (
 };
 
 /**
- * Returns a list of all the directories in a path
+ * Returns a list of all the directories in a path.
  */
 export const listDirs = (p: string) => {
   return path.dirname(p)
     .split("/")
     .filter((s) => s !== "." && s !== "");
+};
+
+/**
+ * Decides whether or not to append the value in `name` to path `p` depending
+ * on the value at `name`.
+ *
+ * Commonly used to make sure paths don't end in "index".
+ */
+export const appendName = (p: string, name: string) => {
+  if (name === "index") {
+    return p;
+  }
+
+  return path.join(p, name);
 };

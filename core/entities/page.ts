@@ -1,13 +1,19 @@
 import { Base } from "./base.ts";
-import { listDirs } from "../utils/file.ts";
-import { dayjs, frontmatter } from "../deps.ts";
+import { listDirs, appendName } from "../utils/file.ts";
+import {
+  path,
+  dayjs,
+  frontmatter,
+} from "../deps.ts";
 
 export class Page extends Base {
   title: string;
+  /** Unprocessed contents of body from markdown */
   body: string;
   date: dayjs.Dayjs | null;
   layout: string;
   categories: string[];
+  url: string;
   attrs = {};
 
   constructor(
@@ -27,6 +33,7 @@ export class Page extends Base {
       layout,
       date,
       categories,
+      url,
       ...attrs
     } = parsedFrontmatter.attrs;
 
@@ -35,6 +42,7 @@ export class Page extends Base {
     this.date = date ? dayjs(date) : (created ? dayjs(created) : null);
     this.layout = layout || "default";
     this.categories = categories || listDirs(this.pathRelative);
+    this.url = url || appendName(path.join("/", this.dir), this.name);
     this.attrs = attrs;
   }
 }
@@ -44,4 +52,5 @@ export interface PageFrontmatter {
   layout?: string;
   date?: string | Date;
   categories?: string[];
+  url?: string;
 }

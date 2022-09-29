@@ -3,6 +3,8 @@ import { Asset } from "./entities/asset.ts";
 import { Page } from "./entities/page.ts";
 import { Renderer } from "./renderer.ts";
 import { ASSETS_DIRNAME } from "./utils/constants.ts";
+import { appendName } from "./utils/file.ts";
+
 
 export class Writer {
   dest: string;
@@ -38,10 +40,7 @@ export class Writer {
 
   writePages(pages: Page[], renderer: Renderer) {
     pages.forEach((page) => {
-      let destDir = path.join(this.dest, page.dir);
-      if (page.name !== "index") {
-        destDir = path.join(destDir, page.name);
-      }
+      const destDir = appendName(path.join(this.dest, page.dir), page.name);
 
       if (!this.createdDirs.has(destDir)) {
         Deno.mkdirSync(destDir, { recursive: true });
