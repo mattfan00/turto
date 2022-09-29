@@ -37,7 +37,7 @@ export class Site {
   }
 
   build() {
-    this.writer.initDest();
+    this.writer.init();
     this.read();
     this.write();
   }
@@ -49,7 +49,8 @@ export class Site {
   }
 
   write() {
-    this.writer.copyAssets(this.assets);
+    this.writer.writeAssets(this.assets);
+    this.writer.writePages(this.pages, this.renderer);
   }
 
   getSrc() {

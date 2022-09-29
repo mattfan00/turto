@@ -17,6 +17,19 @@ export class Renderer {
       this.cache.set(layoutName, nunjucks.compile(content, this.engine));
     }
   }
+
+  render(
+    layoutName: string,
+    // deno-lint-ignore ban-types
+    data?: object,
+  ) {
+    const template = this.cache.get(layoutName);
+    if (!template) {
+      throw new Error(`"${layoutName}" layout does not exist`);
+    }
+
+    return template.render(data);
+  }
 }
 
 const formatDate = (date: dayjs.Dayjs, formatStr: string) => {
