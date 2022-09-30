@@ -3,9 +3,7 @@ import { Asset } from "./entities/asset.ts";
 import { Page } from "./entities/page.ts";
 import { Renderer } from "./renderer.ts";
 import { ASSETS_DIRNAME } from "./utils/constants.ts";
-import { appendName } from "./utils/file.ts";
 import type { Object } from "./utils/types.ts";
-
 
 export class Writer {
   dest: string;
@@ -41,8 +39,7 @@ export class Writer {
 
   writePages(pages: Page[], renderer: Renderer, siteData: Object) {
     pages.forEach((page) => {
-      const destDir = appendName(path.join(this.dest, page.dir), page.name);
-
+      const destDir = path.join(this.dest, page.url);
       if (!this.createdDirs.has(destDir)) {
         Deno.mkdirSync(destDir, { recursive: true });
         this.createdDirs.add(destDir);
@@ -51,9 +48,9 @@ export class Writer {
       const generatedHTML = renderer.render(page.layout, {
         page: page.convertToData(),
         site: siteData,
-      })
+      });
 
-      Deno.writeTextFileSync(path.join(destDir, "index.html"), generatedHTML)
+      Deno.writeTextFileSync(path.join(destDir, "index.html"), generatedHTML);
     });
   }
 }

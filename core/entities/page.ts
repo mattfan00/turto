@@ -1,12 +1,8 @@
-import { Base, Convert } from "./base.ts";
-import { listDirs, appendName } from "../utils/file.ts";
-import {
-  path,
-  dayjs,
-  frontmatter,
-} from "../deps.ts";
+import { Base, Convertible, UrlCompatible } from "./base.ts";
+import { appendName, listDirs } from "../utils/file.ts";
+import { dayjs, frontmatter, path } from "../deps.ts";
 
-export class Page extends Base implements Convert {
+export class Page extends Base implements Convertible, UrlCompatible {
   title: string;
   /** Unprocessed contents of body from markdown */
   body: string;
@@ -54,7 +50,7 @@ export class Page extends Base implements Convert {
       categories: this.categories,
       url: this.url,
       attrs: this.attrs,
-    }
+    };
   }
 }
 

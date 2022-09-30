@@ -1,10 +1,6 @@
 import { path } from "../deps.ts";
 import type { Object } from "../utils/types.ts";
 
-export interface Convert {
-  convertToData: () => Object;
-}
-
 /**
  * Base class that all entities extend from. Handles file information.
  */
@@ -37,4 +33,13 @@ export class Base {
     this.base = parsedPath.base;
     this.ext = parsedPath.ext;
   }
+}
+
+export interface Convertible {
+  convertToData: () => Object;
+}
+
+export interface UrlCompatible {
+  /** URL to entity on the website */
+  url: string;
 }
