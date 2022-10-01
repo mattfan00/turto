@@ -1,18 +1,5 @@
-import { Site } from "./core/site.ts";
-import * as perf from "./core/utils/perf.ts";
+import { Site, SiteOptions } from "./core/site.ts";
 
-const start = () => {
-  perf.track("build-site");
-
-  const site = new Site({
-    src: "./example",
-    dest: "./example/public",
-  });
-  site.build();
-
-  perf.logDuration("build-site");
+export const turto = (options: SiteOptions) => {
+  return new Site(options);
 };
-
-start();
-
-export default start;
