@@ -68,8 +68,8 @@ export class Site implements Convertible {
   convertToData() {
     const convertedPages = [...this.pages]
       .sort((a, b) => {
-        const bTime = b.date ? b.date.unix() : 0;
-        const aTime = a.date ? a.date.unix() : 0;
+        const bTime = b.data.date ? b.data.date.unix() : 0;
+        const aTime = a.data.date ? a.data.date.unix() : 0;
 
         return bTime - aTime;
       })
