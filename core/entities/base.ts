@@ -1,4 +1,4 @@
-import { path } from "../deps.ts";
+import { path } from "../../deps.ts";
 import type { Object } from "../utils/types.ts";
 
 /**

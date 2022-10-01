@@ -3,7 +3,7 @@ import { readDirRecursive } from "../utils/file.ts";
 import { LAYOUTS_DIRNAME } from "../utils/constants.ts";
 import { Layout } from "../entities/layout.ts";
 import { Renderer } from "../engines/renderer.ts";
-import { path } from "../deps.ts";
+import { path } from "../../deps.ts";
 
 export class LayoutReader extends Reader {
   renderer: Renderer;

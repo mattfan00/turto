@@ -1,5 +1,5 @@
 import { Base, Convertible, RawContent } from "./base.ts";
-import { dayjs } from "../deps.ts";
+import { dayjs } from "../../deps.ts";
 
 export class Page extends Base implements Convertible, RawContent {
   rawContent: string;

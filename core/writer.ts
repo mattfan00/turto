@@ -1,4 +1,4 @@
-import { fs, path } from "./deps.ts";
+import { fs, path } from "../deps.ts";
 import { Asset } from "./entities/asset.ts";
 import { Page } from "./entities/page.ts";
 import { Renderer } from "./engines/renderer.ts";

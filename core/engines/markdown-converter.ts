@@ -1,4 +1,4 @@
-import { showdown } from "../deps.ts";
+import { showdown } from "../../deps.ts";
 import { Engine } from "./engine.ts";
 
 export class MarkdownConverter implements Engine<showdown.Converter> {

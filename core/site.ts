@@ -1,4 +1,4 @@
-import { path } from "./deps.ts";
+import { path } from "../deps.ts";
 
 import { Convertible } from "./entities/base.ts";
 import { Page } from "./entities/page.ts";

@@ -2,7 +2,7 @@ import { Reader } from "./reader.ts";
 import { appendName, listDirs, readDirRecursive } from "../utils/file.ts";
 import { PAGES_DIRNAME } from "../utils/constants.ts";
 import { Page, PageFrontmatter } from "../entities/page.ts";
-import { dayjs, frontmatter, path } from "../deps.ts";
+import { dayjs, frontmatter, path } from "../../deps.ts";
 import { MarkdownConverter } from "../engines/markdown-converter.ts";
 
 export class PageReader extends Reader {

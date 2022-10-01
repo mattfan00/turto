@@ -1,4 +1,4 @@
-import { path } from "../deps.ts";
+import { path } from "../../deps.ts";
 
 /**
  * Synchronously reads the directory in `rootDir` and returns a

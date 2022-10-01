@@ -1,4 +1,4 @@
-import { path } from "../deps.ts";
+import { path } from "../../deps.ts";
 import { Base, Convertible } from "./base.ts";
 import { ASSETS_DIRNAME } from "../utils/constants.ts";
 
