@@ -1,63 +1,45 @@
-import { Base, Convertible, UrlCompatible } from "./base.ts";
-import { appendName, listDirs } from "../utils/file.ts";
-import { dayjs, frontmatter, path } from "../deps.ts";
+import { Base, Convertible, RawContent } from "./base.ts";
+import { dayjs } from "../deps.ts";
 
-export class Page extends Base implements Convertible, UrlCompatible {
-  title: string;
-  /** Unprocessed contents of body from markdown */
-  body: string;
-  date: dayjs.Dayjs | null;
-  layout: string;
-  categories: string[];
-  url: string;
-  attrs = {};
+export class Page extends Base implements Convertible, RawContent {
+  rawContent: string;
+  /** Unconverted contents of body from markdown */
+  body = "";
+  /** Converted body from markdown to HTML */
+  content = "";
+  data: PageData = {};
 
   constructor(
     baseDir: string,
     pathRelative: string,
     rawContent: string,
-    created: Date | null,
   ) {
     super(baseDir, pathRelative);
-
     this.rawContent = rawContent;
-    const parsedFrontmatter = frontmatter
-      .extract<PageFrontmatter>(this.rawContent);
-
-    const {
-      title,
-      layout,
-      date,
-      categories,
-      url,
-      ...attrs
-    } = parsedFrontmatter.attrs;
-
-    this.title = title || this.name;
-    this.body = parsedFrontmatter.body;
-    this.date = date ? dayjs(date) : (created ? dayjs(created) : null);
-    this.layout = layout || "default";
-    this.categories = categories || listDirs(this.pathRelative);
-    this.url = url || appendName(path.join("/", this.dir), this.name);
-    this.attrs = attrs;
   }
 
   convertToData() {
     return {
-      title: this.title,
-      layout: this.layout,
-      date: this.date,
-      categories: this.categories,
-      url: this.url,
-      attrs: this.attrs,
+      ...this.data,
+      content: this.content,
     };
   }
 }
 
-export interface PageFrontmatter {
+export interface PageData {
   title?: string;
   layout?: string;
-  date?: string | Date;
+  date?: dayjs.Dayjs | null;
   categories?: string[];
   url?: string;
+  // deno-lint-ignore ban-types
+  attrs?: {};
+}
+
+export interface PageFrontmatter {
+  title: string;
+  layout: string;
+  date: string | Date;
+  categories: string[];
+  url: string;
 }

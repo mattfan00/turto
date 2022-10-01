@@ -1,6 +1,7 @@
-import { dayjs, nunjucks } from "./deps.ts";
+import { dayjs, nunjucks } from "../deps.ts";
+import { Engine } from "./engine.ts";
 
-export class Renderer {
+export class Renderer implements Engine<nunjucks.Environment> {
   engine: nunjucks.Environment;
   cache: Map<string, nunjucks.Template>;
 
@@ -18,7 +19,7 @@ export class Renderer {
     }
   }
 
-  render(
+  run(
     layoutName: string,
     // deno-lint-ignore ban-types
     data?: object,

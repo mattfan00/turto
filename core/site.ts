@@ -5,12 +5,13 @@ import { Page } from "./entities/page.ts";
 import { Asset } from "./entities/asset.ts";
 import { Layout } from "./entities/layout.ts";
 
-import { Renderer } from "./renderer.ts";
+import { Renderer } from "./engines/renderer.ts";
+import { MarkdownConverter } from "./engines/markdown-converter.ts";
+import { Writer } from "./writer.ts";
 
 import { AssetReader } from "./readers/asset-reader.ts";
 import { PageReader } from "./readers/page-reader.ts";
 import { LayoutReader } from "./readers/layout-reader.ts";
-import { Writer } from "./writer.ts";
 
 export class Site implements Convertible {
   options: SiteOptions;
@@ -24,16 +25,18 @@ export class Site implements Convertible {
   layoutReader: LayoutReader;
 
   renderer: Renderer;
+  markdownConverter: MarkdownConverter;
   writer: Writer;
 
   constructor(options?: Partial<SiteOptions>) {
     this.options = { ...defaultSiteOptions, ...options };
 
     this.renderer = new Renderer();
+    this.markdownConverter = new MarkdownConverter();
     this.writer = new Writer(this.getDest());
 
     this.assetReader = new AssetReader(this.getSrc());
-    this.pageReader = new PageReader(this.getSrc());
+    this.pageReader = new PageReader(this.getSrc(), this.markdownConverter);
     this.layoutReader = new LayoutReader(this.getSrc(), this.renderer);
   }
 

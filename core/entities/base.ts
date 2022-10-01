@@ -19,8 +19,6 @@ export class Base {
   base: string;
   /** File extension */
   ext: string;
-  /** Unmodified utf8 encoded string content of file */
-  rawContent?: string;
 
   constructor(baseDir: string, pathRelative: string) {
     const parsedPath = path.parse(pathRelative);
@@ -39,7 +37,7 @@ export interface Convertible {
   convertToData: () => Object;
 }
 
-export interface UrlCompatible {
-  /** URL to entity on the website */
-  url: string;
+export interface RawContent {
+  /** Unmodified utf8 encoded string content of file */
+  rawContent: string;
 }
