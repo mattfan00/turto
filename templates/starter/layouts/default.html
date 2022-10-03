@@ -1,0 +1,19 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>{{ page.title }}</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/assets/index.css">
+  </head>
+  <body>
+    <div class="main">
+      <div class="title">
+        <h2>{{ page.title }}</h2>
+        <div>{{ page.date | formatdate("MMM D, YYYY") }}</div>
+      </div>
+      {{ page.content }}
+    </div>
+  </body>
+</html>
