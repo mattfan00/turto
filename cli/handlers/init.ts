@@ -29,7 +29,7 @@ export const initHandler = async (
 
   if (!isUrl(options.template)) {
     const downloadUrl =
-      "https://codeload.github.com/mattfan00/turto/tar.gz/refs/heads/main";
+      "https://codeload.github.com/mattfan00/turto/tar.gz/main";
     const res = await fetch(downloadUrl);
 
     const body = await res.arrayBuffer();
