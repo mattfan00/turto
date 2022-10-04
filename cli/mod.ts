@@ -1,5 +1,6 @@
 import { commander } from "../deps.ts";
 import { initHandler } from "./handlers/init.ts";
+import { buildHandler } from "./handlers/build.ts";
 import { CliError, styles } from "./utils.ts";
 
 const turtoProgram = new commander.Command();
@@ -13,13 +14,19 @@ turtoProgram
 
 turtoProgram.command("init")
   .description("Create a new turto project")
-  .argument("[dirname]", "Directory name to create project in")
+  .argument("[dirname]", "directory to create project in")
   .option(
     "--template <name>",
-    "Specify a template to bootstrap the project with. Provide the name of an official template or a GitHub URL",
+    "specify a template to bootstrap the project with (provide the name of an official template or a GitHub URL)",
     "starter",
   )
   .action(initHandler);
+
+turtoProgram.command("build")
+  .description("Build your site")
+  .option("-s, --src <src>", "directory to read from")
+  .option("-d, --dest <dest>", "directory to write generated site to")
+  .action(buildHandler);
 
 try {
   await turtoProgram.parseAsync();

@@ -1,13 +1,13 @@
 import { Buffer, copy, fs, gunzip, path, Untar } from "../../deps.ts";
 import { isUrl, styles, trimPrefix } from "../utils.ts";
 
-interface initOptions {
+interface InitOptions {
   template: string;
 }
 
 export const initHandler = async (
   dirname: string | undefined,
-  options: initOptions,
+  options: InitOptions,
 ) => {
   if (dirname) {
     try {
