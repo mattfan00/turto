@@ -13,11 +13,16 @@ turtoProgram
 
 turtoProgram.command("init")
   .description("Create a new turto project")
-  .argument("[dirname]", "directory name to create project in")
+  .argument("[dirname]", "Directory name to create project in")
+  .option(
+    "--template <name>",
+    "Specify a template to bootstrap the project with. Provide the name of an official template or a GitHub URL",
+    "starter",
+  )
   .action(initHandler);
 
 try {
-  turtoProgram.parse();
+  await turtoProgram.parseAsync();
 } catch (error) {
   if (error instanceof CliError) {
     turtoProgram.error(error.message, error.errorOptions);

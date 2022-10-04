@@ -1,12 +1,14 @@
-import { dayjs, fs, path } from "../../deps.ts";
-import {
-  ASSETS_DIRNAME,
-  LAYOUTS_DIRNAME,
-  PAGES_DIRNAME,
-} from "../../core/utils/constants.ts";
-import { styles } from "../utils.ts";
+import { Buffer, copy, fs, gunzip, path, Untar } from "../../deps.ts";
+import { isUrl, styles, trimPrefix } from "../utils.ts";
 
-export const initHandler = (dirname?: string) => {
+interface initOptions {
+  template: string;
+}
+
+export const initHandler = async (
+  dirname: string | undefined,
+  options: initOptions,
+) => {
   if (dirname) {
     try {
       Deno.statSync(dirname);
@@ -23,136 +25,33 @@ export const initHandler = (dirname?: string) => {
     }
   }
 
-  const baseDir = dirname || ".";
+  const baseDir = path.join(Deno.cwd(), dirname || "");
 
-  const currentDate = dayjs();
+  if (!isUrl(options.template)) {
+    const downloadUrl =
+      "https://codeload.github.com/mattfan00/turto/tar.gz/refs/heads/main";
+    const res = await fetch(downloadUrl);
 
-  // create necessary directories and files
-  fs.ensureDirSync(baseDir);
+    const body = await res.arrayBuffer();
+    // uncompress tar.gz file to get tar file
+    const tarData = gunzip(new Uint8Array(body));
+    const untar = new Untar(new Buffer(tarData));
+    const prefix = `turto-main/templates/${options.template}`;
 
-  const assetsDir = path.join(baseDir, ASSETS_DIRNAME);
-  Deno.mkdirSync(assetsDir);
-  Deno.writeTextFileSync(path.join(assetsDir, "index.css"), defaultCssText);
-
-  const pagesDir = path.join(baseDir, PAGES_DIRNAME);
-  Deno.mkdirSync(pagesDir);
-  Deno.writeTextFileSync(
-    path.join(pagesDir, "index.md"),
-    defaultPageText(
-      {
-        title: "My home page",
-        date: currentDate,
-        layout: "home",
-      },
-      "Welcome to my home page!",
-    ),
-  );
-
-  const postsDir = path.join(pagesDir, "posts");
-  Deno.mkdirSync(postsDir);
-  Deno.writeTextFileSync(
-    path.join(postsDir, "first-post.md"),
-    defaultPageText(
-      {
-        title: "First Post",
-        date: currentDate,
-      },
-      "This is my first post that has a lot of interesting content.",
-    ),
-  );
-
-  const layoutsDir = path.join(baseDir, LAYOUTS_DIRNAME);
-  Deno.mkdirSync(layoutsDir);
-  Deno.writeTextFileSync(
-    path.join(layoutsDir, "default.html"),
-    defaultLayoutText(`<div class="title">
-        <h2>{{ page.title }}</h2>
-        <div>{{ page.date | formatdate("MMM D, YYYY") }}</div>
-      </div>
-      {{ page.content }}`),
-  );
-  Deno.writeTextFileSync(
-    path.join(layoutsDir, "home.html"),
-    defaultLayoutText(`<h2>{{ page.title }}</h2>
-      {{ page.content }}
-      {% for page in site.pages %}
-      {% if "posts" in page.categories %}
-      <a href="{{ page.url }}">
-        <div>{{ page.title }}</div>
-      </a>
-      {% endif %}
-      {% endfor %}`),
-  );
-
-  console.log("Initialized project!");
-};
-
-const defaultCssText = `body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-  margin: 15px 25px;
-  font-size: 0.9rem;
-  display: flex;
-  justify-content: center;
-}
-
-.main {
-  min-width: 750px;
-}
-
-.title {
-  margin-bottom: 3em;
-}
-
-.title h2 {
-  margin-bottom: 0.5em;
-}
-`;
-
-interface DefaultPageOptions {
-  title?: string;
-  date?: dayjs.Dayjs;
-  layout?: string;
-}
-
-const defaultPageText = (options: DefaultPageOptions, content: string) => {
-  const yamlOptions = [];
-  if (options.title) {
-    yamlOptions.push(`title: ${options.title}`);
-  }
-  if (options.date) {
-    yamlOptions.push(`date: ${options.date.startOf("hour").format()}`);
-  }
-  if (options.layout) {
-    yamlOptions.push(`layout: ${options.layout}`);
+    await fs.ensureDir(baseDir);
+    for await (const entry of untar) {
+      if (entry.fileName.startsWith(prefix)) {
+        const destPath = path.join(baseDir, trimPrefix(entry.fileName, prefix));
+        if (entry.type === "directory") {
+          await fs.ensureDir(destPath);
+          continue;
+        }
+        const file = await Deno.open(destPath, { write: true, create: true });
+        await copy(entry, file);
+        file.close();
+      }
+    }
   }
 
-  const yaml = yamlOptions.join("\n");
-
-  return (`---
-
-${yaml}
-
----
-
-${content}
-`);
-};
-
-const defaultLayoutText = (content: string) => {
-  return (`
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>{{ page.title }}</title>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/assets/index.css">
-  </head>
-  <body>
-    <div class="main">
-      ${content}
-    </div>
-  </body>
-</html>
-`);
+  // TODO: add in remote templates
 };
