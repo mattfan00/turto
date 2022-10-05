@@ -26,6 +26,7 @@ export const initHandler = async (
   }
 
   const baseDir = path.join(Deno.cwd(), dirname || "");
+  console.log(`Creating a new turto project in ${styles.file(baseDir)}`)
 
   if (!isUrl(options.template)) {
     const downloadUrl =
@@ -36,6 +37,8 @@ export const initHandler = async (
     // uncompress tar.gz file to get tar file
     const tarData = gunzip(new Uint8Array(body));
     const untar = new Untar(new Buffer(tarData));
+    console.log("\nSuccessfully downloaded template\n");
+
     const prefix = `turto-main/templates/${options.template}`;
 
     await fs.ensureDir(baseDir);
@@ -48,10 +51,13 @@ export const initHandler = async (
         }
         const file = await Deno.open(destPath, { write: true, create: true });
         await copy(entry, file);
+        console.log(`Created new file ${styles.file(destPath)}`)
         file.close();
       }
     }
   }
+
+  console.log("\nSuccess!")
 
   // TODO: add in remote templates
 };
