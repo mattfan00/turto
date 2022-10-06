@@ -1,7 +1,9 @@
 import { commander } from "../deps.ts";
+import { CliError, optionParseInt, styles } from "./utils.ts";
+
 import { initHandler } from "./handlers/init.ts";
 import { buildHandler } from "./handlers/build.ts";
-import { CliError, styles } from "./utils.ts";
+import { serveHandler } from "./handlers/serve.ts";
 
 const turtoProgram = new commander.Command();
 
@@ -22,11 +24,27 @@ turtoProgram.command("init")
   )
   .action(initHandler);
 
+const srcOption = new commander.Option(
+  "-s, --src <src>",
+  "directory to read from",
+);
+const destOption = new commander.Option(
+  "-d, --dest <dest>",
+  "directory to write generated site to",
+);
+
 turtoProgram.command("build")
   .description("Build your site")
-  .option("-s, --src <src>", "directory to read from")
-  .option("-d, --dest <dest>", "directory to write generated site to")
+  .addOption(srcOption)
+  .addOption(destOption)
   .action(buildHandler);
+
+turtoProgram.command("serve")
+  .description("Build your site and start a server to serve it")
+  .addOption(srcOption)
+  .addOption(destOption)
+  .option("-p, --port <port>", "port to listen on", optionParseInt, 3000)
+  .action(serveHandler);
 
 try {
   await turtoProgram.parseAsync();

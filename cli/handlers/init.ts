@@ -26,7 +26,7 @@ export const initHandler = async (
   }
 
   const baseDir = path.join(Deno.cwd(), dirname || "");
-  console.log(`Creating a new turto project in ${styles.file(baseDir)}`)
+  console.log(`Creating a new turto project in ${styles.file(baseDir)}`);
 
   if (!isUrl(options.template)) {
     const downloadUrl =
@@ -51,13 +51,13 @@ export const initHandler = async (
         }
         const file = await Deno.open(destPath, { write: true, create: true });
         await copy(entry, file);
-        console.log(`Created new file ${styles.file(destPath)}`)
+        console.log(`Created new file ${styles.file(destPath)}`);
         file.close();
       }
     }
   }
 
-  console.log("\nSuccess!")
+  console.log("\nSuccess!");
 
   // TODO: add in remote templates
 };

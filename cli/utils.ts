@@ -12,6 +12,7 @@ export class CliError extends Error {
 export const styles = {
   error: chalk.bold.red,
   file: chalk.green,
+  success: chalk.green,
 };
 
 export const isUrl = (str: string) => {
@@ -28,4 +29,12 @@ export const trimPrefix = (s: string, prefix: string) => {
     return s.slice(prefix.length);
   }
   return s;
+};
+
+export const optionParseInt = (value: string, _previous: number) => {
+  const parsedValue = parseInt(value, 10);
+  if (isNaN(parsedValue)) {
+    throw new commander.InvalidArgumentError("Value provided is not a number");
+  }
+  return parsedValue;
 };
