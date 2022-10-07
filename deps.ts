@@ -5,6 +5,7 @@ export { Untar } from "https://deno.land/std@0.157.0/archive/tar.ts";
 export { Buffer } from "https://deno.land/std@0.157.0/io/mod.ts";
 export { copy } from "https://deno.land/std@0.157.0/streams/conversion.ts";
 export * as http from "https://deno.land/std@0.157.0/http/mod.ts";
+export { serveFile } from "https://deno.land/std@0.157.0/http/file_server.ts";
 export { default as nunjucks } from "https://esm.sh/nunjucks@3.2.3";
 export { default as showdown } from "https://esm.sh/showdown@2.1.0";
 export { default as dayjs } from "https://esm.sh/dayjs@1.11.5";
