@@ -12,7 +12,6 @@ export class CliError extends Error {
 export const styles = {
   error: chalk.bold.red,
   file: chalk.green,
-  success: chalk.green,
 };
 
 export const isUrl = (str: string) => {
@@ -37,4 +36,16 @@ export const optionParseInt = (value: string, _previous: number) => {
     throw new commander.InvalidArgumentError("Value provided is not a number");
   }
   return parsedValue;
+};
+
+export const getFileInfo = (path: string) => {
+  try {
+    return Deno.statSync(path);
+  } catch (err) {
+    if (err instanceof Deno.errors.NotFound) {
+      return null;
+    } else {
+      throw err;
+    }
+  }
 };
