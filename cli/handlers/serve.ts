@@ -14,28 +14,36 @@ export const serveHandler = async (options: ServeOptions) => {
   const listener = Deno.listen({ port: options.port });
   console.log(`Started server on port ${options.port}\n`);
 
-  const baseDir = site.getDest();
-
   await http.serveListener(listener, async (req) => {
-    const decodedUrl = decodeURI(req.url);
-    const url = new URL(decodedUrl);
+    const ctx: Context = { req, baseDir: site.getDest( )}
+    return await logWrapper(ctx, serve);
+  });
+};
 
-    if (req.method !== "GET") {
-      logEvent(405, req.method, url.pathname);
+interface Context {
+  req: Request,
+  baseDir: string,
+}
+
+type Middleware = (ctx: Context, ...next: Middleware[]) => Promise<Response>;
+
+const serve: Middleware = async (ctx: Context) => {
+    if (ctx.req.method !== "GET") {
       return new Response(null, { status: 405 });
     }
 
-    const baseFilePath = path.join(baseDir, url.pathname);
+    const decodedUrl = decodeURI(ctx.req.url);
+    const url = new URL(decodedUrl);
+
+    const baseFilePath = path.join(ctx.baseDir, url.pathname);
     const baseFile = getFileInfo(baseFilePath);
 
     if (!baseFile) {
-      logEvent(404, req.method, url.pathname);
       return new Response("Not found", { status: 404 });
     }
 
     if (baseFile.isFile) {
-      logEvent(200, req.method, url.pathname);
-      return await serveFile(req, baseFilePath, { fileInfo: baseFile });
+      return await serveFile(ctx.req, baseFilePath, { fileInfo: baseFile });
     }
 
     // if directory then check if it contains an "index.html" file
@@ -46,24 +54,22 @@ export const serveHandler = async (options: ServeOptions) => {
 
     // if no "index.html" file, then return 404
     if (!htmlFile) {
-      logEvent(404, req.method, url.pathname);
       return new Response("Not found", { status: 404 });
     }
 
     // if directory doesn't end with "/" (http://example.com/test), redirect
     if (!baseFilePath.endsWith("/")) {
-      logEvent(301, req.method, url.pathname);
       return new Response(null, {
         status: 301,
         headers: { location: url + "/" },
       });
     } else {
-      logEvent(200, req.method, url.pathname);
-      return await serveFile(req, htmlFilePath, { fileInfo: htmlFile });
+      return await serveFile(ctx.req, htmlFilePath, { fileInfo: htmlFile });
     }
-  });
-};
+}
 
-const logEvent = (status: number, method: string, path: string) => {
-  console.log(`${status} ${method} ${path}`);
+const logWrapper: Middleware = async (ctx: Context, next: Middleware) => {
+  const res = await next(ctx);
+  console.log(`${res.status} ${ctx.req.method} ${ctx.req.url}`);
+  return res;
 };
