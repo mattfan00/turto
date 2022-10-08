@@ -37,6 +37,7 @@ turtoProgram.command("build")
   .description("Build your site")
   .addOption(srcOption)
   .addOption(destOption)
+  .option("-w, --watch", "rebuild your site upon file change")
   .action(buildHandler);
 
 turtoProgram.command("serve")
