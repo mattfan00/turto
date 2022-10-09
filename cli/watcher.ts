@@ -2,15 +2,17 @@ import { path } from "../deps.ts";
 
 export type Next = () => Promise<void>;
 
-export type Middleware = (
-  ctx: Context,
+// deno-lint-ignore no-explicit-any
+export type Middleware<State extends Record<string, any>> = (
+  ctx: Context<State>,
   next: Next,
 ) => Promise<void> | void;
 
-export class Watcher {
+// deno-lint-ignore no-explicit-any
+export class Watcher<State extends Record<string, any>> {
   paths: string[] = [];
   options: Options;
-  #middlewares: Middleware[] = [];
+  #middlewares: Middleware<State>[] = [];
 
   constructor(paths?: string | string[], options?: Partial<Options>) {
     this.options = { ...defaultOptions, ...options };
@@ -43,10 +45,11 @@ export class Watcher {
   }
 
   async #handleEvent(event: Deno.FsEvent) {
-    const context: Context = {
+    const context: Context<State> = {
       path: event.paths,
       file: Deno.statSync(event.paths[0]),
       raw: event,
+      state: {} as State,
     };
     let prevIndex = -1;
 
@@ -66,7 +69,7 @@ export class Watcher {
     await next(0);
   }
 
-  use(fn: Middleware) {
+  use(fn: Middleware<State>) {
     this.#middlewares.push(fn);
   }
 }
@@ -81,8 +84,10 @@ const defaultOptions: Options = {
   base: Deno.cwd(),
 };
 
-export interface Context {
+// deno-lint-ignore no-explicit-any
+export interface Context<State extends Record<string, any>> {
   path: string[];
   file: Deno.FileInfo;
   raw: Deno.FsEvent;
+  state: State;
 }
