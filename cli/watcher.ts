@@ -1,8 +1,10 @@
 import { path } from "../deps.ts";
 
+export type Next = () => Promise<void>;
+
 export type Middleware = (
   ctx: Context,
-  next: () => Promise<void>,
+  next: Next,
 ) => Promise<void> | void;
 
 export class Watcher {
@@ -45,21 +47,21 @@ export class Watcher {
       path: event.paths,
       file: Deno.statSync(event.paths[0]),
       raw: event,
-    }
+    };
     let prevIndex = -1;
 
     const next = async (i: number) => {
       if (i <= prevIndex) {
-        throw new Error("next() is called multiple times in one middleware")
+        throw new Error("next() is called multiple times in one middleware");
       }
       const middleware = this.#middlewares[i];
       if (!middleware) {
-        return
+        return;
       }
       prevIndex = i;
 
-      await middleware(context, next.bind(null, i + 1))
-    }
+      await middleware(context, next.bind(null, i + 1) as Next);
+    };
 
     await next(0);
   }
