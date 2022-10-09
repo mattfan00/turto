@@ -46,21 +46,22 @@ export class Watcher {
       file: Deno.statSync(event.paths[0]),
       raw: event,
     }
+    let prevIndex = -1;
 
-    let currIndex = -1;
-
-    const next = async () => {
-      // TODO: add check for calling next() twice
-      currIndex += 1;
-      const middleware = this.#middlewares[currIndex];
+    const next = async (i: number) => {
+      if (i <= prevIndex) {
+        throw new Error("next() is called multiple times in one middleware")
+      }
+      const middleware = this.#middlewares[i];
       if (!middleware) {
         return
       }
+      prevIndex = i;
 
-      await middleware(context, next)
+      await middleware(context, next.bind(null, i + 1))
     }
 
-    await next();
+    await next(0);
   }
 
   use(fn: Middleware) {
