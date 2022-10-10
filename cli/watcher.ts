@@ -1,4 +1,19 @@
 import { path } from "../deps.ts";
+import { getFileInfo } from "./utils.ts";
+
+export type EventName =
+  | "any"
+  | "access"
+  | "create"
+  | "modify"
+  | "remove"
+  | "other";
+
+export interface CustomFsEvent {
+  path: string;
+  kind: EventName;
+  flag?: Deno.FsEventFlag;
+}
 
 export type Next = () => Promise<void>;
 
@@ -40,15 +55,24 @@ export class Watcher<State extends Record<string, any>> {
     });
 
     for await (const event of watcher) {
-      await this.#handleEvent(event);
+      event.paths.forEach(async (path) => {
+        await this.#handleEvent({
+          path: path,
+          kind: event.kind,
+          flag: event.flag,
+        });
+      });
     }
   }
 
-  async #handleEvent(event: Deno.FsEvent) {
+  async #handleEvent(event: CustomFsEvent) {
+    const file = getFileInfo(event.path);
+    const eventName = this.#getEventName(event, file);
     const context: Context<State> = {
-      path: event.paths,
-      file: Deno.statSync(event.paths[0]),
-      raw: event,
+      path: event.path,
+      event: eventName,
+      file: file,
+      flag: event.flag,
       state: {} as State,
     };
     let prevIndex = -1;
@@ -69,6 +93,18 @@ export class Watcher<State extends Record<string, any>> {
     await next(0);
   }
 
+  #getEventName(event: CustomFsEvent, file: Deno.FileInfo | null): EventName {
+    let eventName = event.kind;
+
+    if (eventName === "modify") {
+      if (!file) {
+        eventName = "remove";
+      }
+    }
+
+    return eventName;
+  }
+
   use(fn: Middleware<State>) {
     this.#middlewares.push(fn);
   }
@@ -86,8 +122,9 @@ const defaultOptions: Options = {
 
 // deno-lint-ignore no-explicit-any
 export interface Context<State extends Record<string, any>> {
-  path: string[];
-  file: Deno.FileInfo;
-  raw: Deno.FsEvent;
+  path: string;
+  event: EventName;
+  file: Deno.FileInfo | null;
+  flag?: Deno.FsEventFlag;
   state: State;
 }
