@@ -1,4 +1,4 @@
-import { path } from "../deps.ts";
+import { objectHash, path } from "../deps.ts";
 import { getFileInfo } from "./utils.ts";
 
 export type EventName =
@@ -28,6 +28,7 @@ export class Watcher<State extends Record<string, any>> {
   paths: string[] = [];
   options: Options;
   #middlewares: Middleware<State>[] = [];
+  #debounceTimers = new Map<string, number>();
 
   constructor(paths?: string | string[], options?: Partial<Options>) {
     this.options = { ...defaultOptions, ...options };
@@ -56,11 +57,29 @@ export class Watcher<State extends Record<string, any>> {
 
     for await (const event of watcher) {
       event.paths.forEach(async (path) => {
-        await this.#handleEvent({
+        const newEvent = {
           path: path,
           kind: event.kind,
           flag: event.flag,
-        });
+        };
+
+        if (this.options.debounceTime) {
+          const key = objectHash(newEvent);
+
+          if (this.#debounceTimers.has(key)) {
+            clearTimeout(this.#debounceTimers.get(key));
+            this.#debounceTimers.delete(key);
+          }
+
+          const newTimer = setTimeout(async () => {
+            this.#debounceTimers.delete(key);
+            await this.#handleEvent(newEvent);
+          }, this.options.debounceTime);
+
+          this.#debounceTimers.set(key, newTimer);
+        } else {
+          await this.#handleEvent(newEvent);
+        }
       });
     }
   }
@@ -113,11 +132,13 @@ export class Watcher<State extends Record<string, any>> {
 export interface Options {
   recursive: boolean;
   base: string;
+  debounceTime: number | null;
 }
 
 const defaultOptions: Options = {
   recursive: true,
   base: Deno.cwd(),
+  debounceTime: 50,
 };
 
 // deno-lint-ignore no-explicit-any
