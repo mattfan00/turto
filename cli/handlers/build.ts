@@ -14,7 +14,7 @@ export const buildHandler = async (options: BuildOptions) => {
 
   if (options.watch) {
     const watcher = new Watcher(site.options.src, {
-      ignore: `${path.join(site.getSrc(), "public/**")}`
+      ignore: `${path.join(site.getSrc(), "public/**")}`,
     });
     console.log(
       `Started watching for changes in ${styles.file(site.getSrc())}\n`,
