@@ -1,12 +1,19 @@
-import { dayjs, frontmatter, micromatch, path } from "../deps.ts";
+import { dayjs, frontmatter, marked, micromatch, path } from "../deps.ts";
 import { listDirs, readDirRecursive } from "./utils/file.ts";
 import { Asset, BaseFile, Page, PageFrontmatter } from "./entities.ts";
+import { Renderer } from "./renderer.ts";
 
 export class Site {
   options: SiteOptions;
+  pages: Page[] = [];
+  assets: Asset[] = [];
+
+  renderer: Renderer;
 
   constructor(options?: Partial<SiteOptions>) {
     this.options = { ...defaultSiteOptions, ...options };
+
+    this.renderer = new Renderer();
   }
 
   load() {
@@ -14,31 +21,40 @@ export class Site {
       .filter((p) => !micromatch.isMatch(p, this.options.ignore));
   }
 
-  loadPage(pathRelative: string): Page {
+  loadPage(pathRelative: string) {
     const baseFile = this.#loadBaseFile(pathRelative);
-    const content = Deno.readTextFileSync(
+    const fileContent = Deno.readTextFileSync(
       path.join(this.getBase(), pathRelative),
     );
 
     let pageData = {} as Partial<PageFrontmatter>;
-    if (frontmatter.test(content)) {
+    let body = fileContent;
+    if (frontmatter.test(fileContent)) {
       const parsedFrontmatter = frontmatter
-        .extract<Partial<PageFrontmatter>>(content);
+        .extract<Partial<PageFrontmatter>>(fileContent);
 
       pageData = parsedFrontmatter.attrs;
+      body = parsedFrontmatter.body;
     }
 
     const {
-      path: p,
+      path: frontmatterPath,
       layout,
       categories,
       date,
       ...attrs
     } = pageData;
 
-    return {
+    const content = marked.parse(body);
+    let finalPath = frontmatterPath;
+    if (!finalPath) {
+      const { dir, name } = path.parse(pathRelative);
+      finalPath = path.join("/", dir, name + ".html");
+    }
+
+    const page: Page = {
       ...baseFile,
-      path: p || baseFile.path,
+      path: frontmatterPath || finalPath,
       content: content,
       layout: layout,
       categories: categories || listDirs(pathRelative),
@@ -47,23 +63,34 @@ export class Site {
         : (baseFile.stat.birthtime ? dayjs(baseFile.stat.birthtime) : null),
       ...attrs,
     };
+
+    this.pages.push(page);
   }
 
-  loadAsset(pathRelative: string, getContent: boolean): Asset {
+  loadAsset(pathRelative: string, getContent = false) {
     const baseFile = this.#loadBaseFile(pathRelative);
     const content = getContent
       ? Deno.readFileSync(path.join(this.getBase(), pathRelative))
       : undefined;
-    return {
+
+    const asset: Asset = {
       ...baseFile,
       content: content,
     };
+
+    this.assets.push(asset);
   }
 
   loadLayout(pathRelative: string) {
     const content = Deno.readTextFileSync(
-      path.join(this.getBase(), pathRelative),
+      path.join(this.getBase(), this.options.layouts, pathRelative),
     );
+
+    this.renderer.compile(pathRelative, content);
+  }
+
+  get layouts() {
+    return [...this.renderer.cache.keys()];
   }
 
   #loadBaseFile(pathRelative: string): BaseFile {
@@ -94,10 +121,12 @@ export class Site {
 export interface SiteOptions {
   /** Current working directory */
   base: string;
-  /** Directory relative to base where files are located */
+  /** Directory relative to `base` where files are located */
   src: string;
-  /** Directory relative to base where site will be generated */
+  /** Directory relative to `base` where site will be generated */
   dest: string;
+  /** Directory relative to `src` where layouts are located */
+  layouts: string;
   ignore: string[];
 }
 
@@ -105,5 +134,6 @@ const defaultSiteOptions: SiteOptions = {
   base: Deno.cwd(),
   src: "./",
   dest: "./_site",
+  layouts: "_layouts",
   ignore: [],
 };
