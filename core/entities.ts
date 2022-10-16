@@ -11,6 +11,8 @@ export interface BaseFile {
 
 export interface Page extends BaseFile {
   content: string;
+  /** Contents of the file after parsing out the frontmatter */
+  body: string;
   layout?: string;
   categories: string[];
   date: dayjs.Dayjs | null;

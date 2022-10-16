@@ -54,8 +54,9 @@ export class Site {
 
     const page: Page = {
       ...baseFile,
-      path: frontmatterPath || finalPath,
+      path: finalPath,
       content: content,
+      body: body,
       layout: layout,
       categories: categories || listDirs(pathRelative),
       date: date
