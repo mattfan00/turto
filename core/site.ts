@@ -1,5 +1,5 @@
 import { dayjs, frontmatter, marked, micromatch, path } from "../deps.ts";
-import { listDirs, readDirRecursive } from "./utils/file.ts";
+import { listDirs, readDirRecursive, trimPrefix } from "./utils/file.ts";
 import { Asset, BaseFile, Page, PageFrontmatter } from "./entities.ts";
 import { Renderer } from "./renderer.ts";
 
@@ -16,9 +16,29 @@ export class Site {
     this.renderer = new Renderer();
   }
 
-  load() {
+  load(options?: LoadOptions) {
     const paths = readDirRecursive(this.getSrc())
       .filter((p) => !micromatch.isMatch(p, this.options.ignore));
+
+    paths.forEach((p) => {
+      // Ignore "." files
+      if (path.basename(p).startsWith(".")) {
+        return;
+      }
+
+      const ext = path.extname(p);
+
+      if (p.startsWith(this.getLayoutsDir())) {
+        this.loadLayout(trimPrefix(p, this.getLayoutsDir()));
+      } else if (ext === ".md") {
+        this.loadPage(p);
+      } else {
+        const readContent = options?.readAssetContent
+          ? micromatch.isMatch(p, options.readAssetContent)
+          : false;
+        this.loadAsset(p, readContent);
+      }
+    });
   }
 
   loadPage(pathRelative: string) {
@@ -117,6 +137,10 @@ export class Site {
   getDest() {
     return path.join(this.options.base, this.options.dest);
   }
+
+  getLayoutsDir() {
+    return path.normalize(this.options.layouts);
+  }
 }
 
 export interface SiteOptions {
@@ -128,7 +152,7 @@ export interface SiteOptions {
   dest: string;
   /** Directory relative to `src` where layouts are located */
   layouts: string;
-  ignore: string[];
+  ignore: string | string[];
 }
 
 const defaultSiteOptions: SiteOptions = {
@@ -138,3 +162,8 @@ const defaultSiteOptions: SiteOptions = {
   layouts: "_layouts",
   ignore: [],
 };
+
+export interface LoadOptions {
+  /** Specifies which assets to read the content for */
+  readAssetContent?: string | string[];
+}

@@ -51,3 +51,10 @@ export const appendName = (p: string, name: string) => {
 
   return path.join(p, name);
 };
+
+export const trimPrefix = (s: string, prefix: string) => {
+  if (prefix !== "" && s.startsWith(prefix)) {
+    return s.slice(prefix.length);
+  }
+  return s;
+};
