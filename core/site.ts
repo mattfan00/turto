@@ -16,6 +16,15 @@ export class Site {
     this.renderer = new Renderer();
   }
 
+  addLayoutFilter(
+    name: string,
+    // deno-lint-ignore no-explicit-any
+    func: (...args: any[]) => any,
+    async?: boolean,
+  ) {
+    this.renderer.engine.addFilter(name, func, async);
+  }
+
   load() {
     const paths = readDirRecursive(this.getSrc())
       .filter((p) =>
