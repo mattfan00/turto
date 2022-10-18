@@ -1,5 +1,5 @@
 import { dayjs, frontmatter, marked, micromatch, path } from "../deps.ts";
-import { listDirs, readDirRecursive, trimPrefix } from "./utils/file.ts";
+import { listDirs, readDirRecursive } from "./utils/file.ts";
 import { Asset, BaseFile, Page, PageFrontmatter } from "./entities.ts";
 import { Renderer } from "./renderer.ts";
 
@@ -18,7 +18,10 @@ export class Site {
 
   load(options?: LoadOptions) {
     const paths = readDirRecursive(this.getSrc())
-      .filter((p) => !micromatch.isMatch(p, this.options.ignore));
+      .filter((p) =>
+        !micromatch.isMatch(p, this.options.ignore) &&
+        !p.startsWith(this.getLayoutsDir())
+      );
 
     paths.forEach((p) => {
       // Ignore "." files
@@ -28,9 +31,7 @@ export class Site {
 
       const ext = path.extname(p);
 
-      if (p.startsWith(this.getLayoutsDir())) {
-        this.loadLayout(trimPrefix(p, this.getLayoutsDir()));
-      } else if (ext === ".md") {
+      if (ext === ".md") {
         this.loadPage(p);
       } else {
         const readContent = options?.readAssetContent
@@ -38,6 +39,14 @@ export class Site {
           : false;
         this.loadAsset(p, readContent);
       }
+    });
+
+    const layoutPaths = readDirRecursive(
+      path.join(this.getSrc(), this.getLayoutsDir()),
+    );
+
+    layoutPaths.forEach((p) => {
+      this.loadLayout(p);
     });
   }
 
@@ -124,6 +133,24 @@ export class Site {
     };
   }
 
+  render() {
+    const siteData = this.convertToData();
+    this.pages.forEach((page) =>
+      this.renderPage(page, {
+        site: siteData,
+        page: page,
+      })
+    );
+  }
+
+  // deno-lint-ignore ban-types
+  renderPage(page: Page, data?: object) {
+    if (page.layout) {
+      const generatedHtml = this.renderer.run(page.layout, data);
+      page.content = generatedHtml;
+    }
+  }
+
   build() {}
 
   getBase() {
@@ -140,6 +167,13 @@ export class Site {
 
   getLayoutsDir() {
     return path.normalize(this.options.layouts);
+  }
+
+  convertToData() {
+    return {
+      pages: this.pages,
+      assets: this.assets,
+    };
   }
 }
 
