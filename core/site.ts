@@ -16,7 +16,7 @@ export class Site {
     this.renderer = new Renderer();
   }
 
-  load(options?: LoadOptions) {
+  load() {
     const paths = readDirRecursive(this.getSrc())
       .filter((p) =>
         !micromatch.isMatch(p, this.options.ignore) &&
@@ -34,10 +34,7 @@ export class Site {
       if (ext === ".md") {
         this.loadPage(p);
       } else {
-        const readContent = options?.readAssetContent
-          ? micromatch.isMatch(p, options.readAssetContent)
-          : false;
-        this.loadAsset(p, readContent);
+        this.loadAsset(p);
       }
     });
 
@@ -48,6 +45,8 @@ export class Site {
     layoutPaths.forEach((p) => {
       this.loadLayout(p);
     });
+
+    return this;
   }
 
   loadPage(pathRelative: string) {
@@ -97,7 +96,13 @@ export class Site {
     this.pages.push(page);
   }
 
-  loadAsset(pathRelative: string, getContent = false) {
+  loadAsset(pathRelative: string, getContent?: boolean) {
+    console.log(getContent)
+    if (getContent === undefined) {
+      getContent = this.options.readAssetContent
+        ? micromatch.isMatch(pathRelative, this.options.readAssetContent)
+        : false;
+    }
     const baseFile = this.#loadBaseFile(pathRelative);
     const content = getContent
       ? Deno.readFileSync(path.join(this.getBase(), pathRelative))
@@ -141,6 +146,8 @@ export class Site {
         page: page,
       })
     );
+
+    return this;
   }
 
   // deno-lint-ignore ban-types
@@ -187,6 +194,8 @@ export interface SiteOptions {
   /** Directory relative to `src` where layouts are located */
   layouts: string;
   ignore: string | string[];
+  /** Specifies which assets to read the content for */
+  readAssetContent: string | string[];
 }
 
 const defaultSiteOptions: SiteOptions = {
@@ -195,9 +204,5 @@ const defaultSiteOptions: SiteOptions = {
   dest: "./_site",
   layouts: "_layouts",
   ignore: [],
+  readAssetContent: [],
 };
-
-export interface LoadOptions {
-  /** Specifies which assets to read the content for */
-  readAssetContent?: string | string[];
-}
