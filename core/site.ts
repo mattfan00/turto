@@ -1,4 +1,4 @@
-import { dayjs, frontmatter, marked, micromatch, path } from "../deps.ts";
+import { dayjs, frontmatter, fs, marked, micromatch, path } from "../deps.ts";
 import { listDirs, readDirRecursive } from "./utils/file.ts";
 import { Asset, BaseFile, Page, PageFrontmatter } from "./entities.ts";
 import { Renderer } from "./renderer.ts";
@@ -74,14 +74,14 @@ export class Site {
     } = pageData;
 
     const content = marked.parse(body);
-    let finalPath = frontmatterPath;
-    if (!finalPath) {
-      const { dir, name } = path.parse(pathRelative);
-      finalPath = path.join("/", dir, name + ".html");
-    }
+
+    const { dir, name } = path.parse(pathRelative);
+    const dest = path.join(dir, name + ".html");
+    const finalPath = frontmatterPath || path.join("/", dest);
 
     const page: Page = {
       ...baseFile,
+      dest: dest,
       path: finalPath,
       content: content,
       body: body,
@@ -97,7 +97,6 @@ export class Site {
   }
 
   loadAsset(pathRelative: string, getContent?: boolean) {
-    console.log(getContent)
     if (getContent === undefined) {
       getContent = this.options.readAssetContent
         ? micromatch.isMatch(pathRelative, this.options.readAssetContent)
@@ -158,7 +157,35 @@ export class Site {
     }
   }
 
-  build() {}
+  build() {
+    fs.emptyDirSync(this.getDest());
+
+    this.pages.forEach((page) => {
+      this.#makeDir(page.dest);
+
+      Deno.writeTextFileSync(
+        path.join(this.getDest(), page.dest),
+        page.content,
+      );
+    });
+
+    this.assets.forEach((asset) => {
+      this.#makeDir(asset.dest);
+
+      const dest = path.join(this.getDest(), asset.dest);
+      if (asset.content !== undefined) {
+        Deno.writeFileSync(dest, asset.content);
+      } else {
+        Deno.copyFileSync(path.join(this.getSrc(), asset.src), dest);
+      }
+    });
+  }
+
+  #makeDir(dest: string) {
+    Deno.mkdirSync(path.join(this.getDest(), path.dirname(dest)), {
+      recursive: true,
+    });
+  }
 
   getBase() {
     return this.options.base;
