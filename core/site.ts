@@ -1,4 +1,12 @@
-import { dayjs, frontmatter, fs, marked, micromatch, path } from "../deps.ts";
+import {
+  dayjs,
+  frontmatter,
+  fs,
+  marked,
+  micromatch,
+  MicromatchOptions,
+  path,
+} from "../deps.ts";
 import { listDirs, readDirRecursive } from "./utils/file.ts";
 import { Asset, BaseFile, Page, PageFrontmatter } from "./entities.ts";
 import { Renderer } from "./renderer.ts";
@@ -25,10 +33,30 @@ export class Site {
     this.renderer.engine.addFilter(name, func, async);
   }
 
+  getBase() {
+    return this.options.base;
+  }
+
+  getSrc() {
+    return path.join(this.options.base, this.options.src);
+  }
+
+  getDest() {
+    return path.join(this.options.base, this.options.dest);
+  }
+
+  getLayoutsDir() {
+    return path.normalize(this.options.layouts);
+  }
+
   load() {
     const paths = readDirRecursive(this.getSrc())
       .filter((p) =>
-        !micromatch.isMatch(p, this.options.ignore) &&
+        !micromatch.isMatch(
+          p,
+          this.options.ignore,
+          this.options.micromatchOptions,
+        ) &&
         !p.startsWith(this.getLayoutsDir())
       );
 
@@ -108,7 +136,11 @@ export class Site {
   loadAsset(pathRelative: string, getContent?: boolean) {
     if (getContent === undefined) {
       getContent = this.options.readAssetContent
-        ? micromatch.isMatch(pathRelative, this.options.readAssetContent)
+        ? micromatch.isMatch(
+          pathRelative,
+          this.options.readAssetContent,
+          this.options.micromatchOptions,
+        )
         : false;
     }
     const baseFile = this.#loadBaseFile(pathRelative);
@@ -196,22 +228,6 @@ export class Site {
     });
   }
 
-  getBase() {
-    return this.options.base;
-  }
-
-  getSrc() {
-    return path.join(this.options.base, this.options.src);
-  }
-
-  getDest() {
-    return path.join(this.options.base, this.options.dest);
-  }
-
-  getLayoutsDir() {
-    return path.normalize(this.options.layouts);
-  }
-
   convertToData() {
     return {
       pages: this.pages,
@@ -232,6 +248,7 @@ export interface SiteOptions {
   ignore: string | string[];
   /** Specifies which assets to read the content for */
   readAssetContent: string | string[];
+  micromatchOptions: MicromatchOptions;
 }
 
 const defaultSiteOptions: SiteOptions = {
@@ -241,4 +258,7 @@ const defaultSiteOptions: SiteOptions = {
   layouts: "_layouts",
   ignore: [],
   readAssetContent: [],
+  micromatchOptions: {
+    basename: true,
+  },
 };
