@@ -7,9 +7,10 @@ import {
   MicromatchOptions,
   path,
 } from "../deps.ts";
-import { listDirs, readDirRecursive } from "./utils/file.ts";
+import { listDirs } from "./utils/file.ts";
 import { Asset, BaseFile, Page, PageFrontmatter } from "./entities.ts";
 import { Renderer } from "./renderer.ts";
+import * as plugins from "./plugins.ts";
 
 export class Site {
   options: SiteOptions;
@@ -17,6 +18,8 @@ export class Site {
   assets: Asset[] = [];
 
   renderer: Renderer;
+
+  #plugins: Plugin[] = [];
 
   constructor(options?: Partial<SiteOptions>) {
     this.options = { ...defaultSiteOptions, ...options };
@@ -49,45 +52,25 @@ export class Site {
     return path.normalize(this.options.layouts);
   }
 
-  load() {
-    const paths = readDirRecursive(this.getSrc())
-      .filter((p) =>
-        !micromatch.isMatch(
-          p,
-          this.options.ignore,
-          this.options.micromatchOptions,
-        ) &&
-        !p.startsWith(this.getLayoutsDir())
-      );
+  get layouts() {
+    return [...this.renderer.cache.keys()];
+  }
 
-    paths.forEach((p) => {
-      // Ignore "." files
-      if (path.basename(p).startsWith(".")) {
-        return;
-      }
-
-      const ext = path.extname(p);
-
-      if (ext === ".md") {
-        this.loadPage(p);
-      } else {
-        this.loadAsset(p);
-      }
-    });
-
-    const layoutPaths = readDirRecursive(
-      path.join(this.getSrc(), this.getLayoutsDir()),
-    );
-
-    layoutPaths.forEach((p) => {
-      this.loadLayout(p);
-    });
-
+  use(fn: Plugin) {
+    this.#plugins.push(fn);
     return this;
   }
 
-  loadPage(pathRelative: string) {
-    const baseFile = this.#loadBaseFile(pathRelative);
+  load() {
+    return this.use(plugins.load);
+  }
+
+  render() {
+    return this.use(plugins.render);
+  }
+
+  readPage(pathRelative: string): Page {
+    const baseFile = this.#readBaseFile(pathRelative);
     const fileContent = Deno.readTextFileSync(
       path.join(this.getBase(), pathRelative),
     );
@@ -130,10 +113,10 @@ export class Site {
       ...attrs,
     };
 
-    this.pages.push(page);
+    return page;
   }
 
-  loadAsset(pathRelative: string, getContent?: boolean) {
+  readAsset(pathRelative: string, getContent?: boolean): Asset {
     if (getContent === undefined) {
       getContent = this.options.readAssetContent
         ? micromatch.isMatch(
@@ -143,7 +126,7 @@ export class Site {
         )
         : false;
     }
-    const baseFile = this.#loadBaseFile(pathRelative);
+    const baseFile = this.#readBaseFile(pathRelative);
     const content = getContent
       ? Deno.readFileSync(path.join(this.getBase(), pathRelative))
       : undefined;
@@ -153,22 +136,10 @@ export class Site {
       content: content,
     };
 
-    this.assets.push(asset);
+    return asset;
   }
 
-  loadLayout(pathRelative: string) {
-    const content = Deno.readTextFileSync(
-      path.join(this.getBase(), this.options.layouts, pathRelative),
-    );
-
-    this.renderer.compile(pathRelative, content);
-  }
-
-  get layouts() {
-    return [...this.renderer.cache.keys()];
-  }
-
-  #loadBaseFile(pathRelative: string): BaseFile {
+  #readBaseFile(pathRelative: string): BaseFile {
     const stat = Deno.statSync(path.join(this.getBase(), pathRelative));
     return {
       src: pathRelative,
@@ -178,28 +149,12 @@ export class Site {
     };
   }
 
-  render() {
-    const siteData = this.convertToData();
-    this.pages.forEach((page) =>
-      this.renderPage(page, {
-        site: siteData,
-        page: page,
-      })
-    );
-
-    return this;
-  }
-
-  // deno-lint-ignore ban-types
-  renderPage(page: Page, data?: object) {
-    if (page.layout) {
-      const generatedHtml = this.renderer.run(page.layout, data);
-      page.content = generatedHtml;
-    }
-  }
-
   build() {
     fs.emptyDirSync(this.getDest());
+
+    this.#plugins.forEach(async (plugin) => {
+      await plugin(this);
+    });
 
     this.pages.forEach((page) => {
       this.#makeDir(page.dest);
@@ -235,6 +190,8 @@ export class Site {
     };
   }
 }
+
+export type Plugin = (site: Site) => Promise<void> | void;
 
 export interface SiteOptions {
   /** Current working directory */
