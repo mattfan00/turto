@@ -1,7 +1,6 @@
-import { dayjs, nunjucks } from "../../deps.ts";
-import { Engine } from "./engine.ts";
+import { dayjs, nunjucks } from "../deps.ts";
 
-export class Renderer implements Engine<nunjucks.Environment> {
+export class Renderer {
   engine: nunjucks.Environment;
   cache: Map<string, nunjucks.Template>;
 
