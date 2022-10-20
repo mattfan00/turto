@@ -7,7 +7,7 @@ import {
   MicromatchOptions,
   path,
 } from "../deps.ts";
-import { listDirs } from "./utils/file.ts";
+import { appendName, listDirs } from "./utils/file.ts";
 import { Object } from "./utils/types.ts";
 import { Asset, BaseFile, Page, PageFrontmatter } from "./entities.ts";
 import { Renderer } from "./renderer.ts";
@@ -103,13 +103,20 @@ export class Site {
     const content = marked.parse(body);
 
     const { dir, name } = path.parse(pathRelative);
-    const dest = path.join(dir, name + ".html");
-    const finalPath = frontmatterPath || path.join("/", dest);
+    let dest: string;
+    let genPath: string;
+    if (this.options.prettyPaths) {
+      dest = path.join(appendName(dir, name), "index.html");
+      genPath = appendName(path.join("/", dir), name);
+    } else {
+      dest = path.join(dir, name + ".html");
+      genPath = path.join("/", dest);
+    }
 
     const page: Page = {
       ...baseFile,
       dest: dest,
-      path: finalPath,
+      path: frontmatterPath || genPath,
       content: content,
       body: body,
       layout: layout,
@@ -202,6 +209,8 @@ export interface SiteOptions {
   dest: string;
   /** Directory relative to `src` where layouts are located */
   layouts: string;
+  /** Convert "dir/hello.html" to "dir/hello/index.html" */
+  prettyPaths: boolean;
   /** Ignore files when using `load`, uses `micromatch` */
   ignore: string | string[];
   /** Specifies which assets to read the content for */
@@ -215,6 +224,7 @@ const defaultSiteOptions: SiteOptions = {
   src: "./",
   dest: "./_site",
   layouts: "_layouts",
+  prettyPaths: true,
   ignore: [],
   readAssetContent: [],
   micromatchOptions: {
