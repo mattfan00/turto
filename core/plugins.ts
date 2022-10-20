@@ -47,7 +47,11 @@ export const render = (site: Site) => {
   site.pages.forEach((page) => {
     if (page.layout) {
       const generatedHtml = site.renderer.run(page.layout, {
-        site: site.convertToData(),
+        ...site.data,
+        site: {
+          pages: site.pages,
+          assets: site.assets,
+        },
         page: page,
       });
       page.content = generatedHtml;

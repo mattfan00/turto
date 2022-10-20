@@ -8,6 +8,7 @@ import {
   path,
 } from "../deps.ts";
 import { listDirs } from "./utils/file.ts";
+import { Object } from "./utils/types.ts";
 import { Asset, BaseFile, Page, PageFrontmatter } from "./entities.ts";
 import { Renderer } from "./renderer.ts";
 import * as plugins from "./plugins.ts";
@@ -16,6 +17,7 @@ export class Site {
   options: SiteOptions;
   pages: Page[] = [];
   assets: Asset[] = [];
+  data: Object = {};
 
   renderer: Renderer;
 
@@ -54,6 +56,11 @@ export class Site {
 
   get layouts() {
     return [...this.renderer.cache.keys()];
+  }
+
+  setData(data: Object) {
+    this.data = data;
+    return this;
   }
 
   use(fn: Plugin) {
@@ -182,13 +189,6 @@ export class Site {
       recursive: true,
     });
   }
-
-  convertToData() {
-    return {
-      pages: this.pages,
-      assets: this.assets,
-    };
-  }
 }
 
 export type Plugin = (site: Site) => Promise<void> | void;
@@ -202,9 +202,11 @@ export interface SiteOptions {
   dest: string;
   /** Directory relative to `src` where layouts are located */
   layouts: string;
+  /** Ignore files when using `load`, uses `micromatch` */
   ignore: string | string[];
   /** Specifies which assets to read the content for */
   readAssetContent: string | string[];
+  /** Options for when `micromatch` is used */
   micromatchOptions: MicromatchOptions;
 }
 
