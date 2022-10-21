@@ -51,8 +51,6 @@ export class Server {
 
   async listen(options: Deno.ListenOptions) {
     const listener = Deno.listen(options);
-    console.log(`Started server on port ${options.port}\n`);
-
     await http.serveListener(listener, async (req) => await this.handle(req));
   }
 }

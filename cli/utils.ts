@@ -1,4 +1,4 @@
-import { chalk, commander } from "../deps.ts";
+import { chalk, commander, path } from "../deps.ts";
 
 export class CliError extends Error {
   errorOptions: commander.ErrorOptions;
@@ -12,6 +12,7 @@ export class CliError extends Error {
 export const styles = {
   error: chalk.bold.red,
   file: chalk.green,
+  link: chalk.cyan,
 };
 
 export const isUrl = (str: string) => {
@@ -30,6 +31,19 @@ export const trimPrefix = (s: string, prefix: string) => {
   return s;
 };
 
+export const trimPath = (p: string) => {
+  let newPath = path.normalize(p);
+  if (newPath.endsWith("/")) {
+    newPath = newPath.slice(0, newPath.length - 1);
+  }
+  const prefix = newPath.slice(0, newPath.indexOf("/"));
+  if (prefix === "." || prefix === "..") {
+    newPath = newPath.slice(newPath.indexOf("/") + 1);
+  }
+
+  return newPath
+}
+
 export const optionParseInt = (value: string, _previous: number) => {
   const parsedValue = parseInt(value, 10);
   if (isNaN(parsedValue)) {
@@ -47,5 +61,23 @@ export const getFileInfo = (path: string) => {
     } else {
       throw err;
     }
+  }
+};
+
+export const runMod = async (src: string) => {
+  const scriptPath = path.join(src, "mod.ts");
+  const p = Deno.run({
+    cmd: [
+      Deno.execPath(),
+      "run",
+      "-A",
+      scriptPath,
+    ],
+  });
+  const status = await p.status();
+  p.close();
+
+  if (!status.success) {
+    throw new Error(`Error running script at ${styles.file(scriptPath)}`);
   }
 };

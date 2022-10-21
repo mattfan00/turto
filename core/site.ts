@@ -212,9 +212,9 @@ export interface SiteOptions {
   /** Convert "dir/hello.html" to "dir/hello/index.html" */
   prettyPaths: boolean;
   /** Ignore files when using `load`, uses `micromatch` */
-  ignore: string | string[];
+  ignore: string[];
   /** Specifies which assets to read the content for */
-  readAssetContent: string | string[];
+  readAssetContent: string[];
   /** Options for when `micromatch` is used */
   micromatchOptions: MicromatchOptions;
 }
