@@ -1,5 +1,5 @@
 import { runMod, styles, trimPath } from "../utils.ts";
-import { path, Watcher } from "../../deps.ts";
+import { Watcher } from "../../deps.ts";
 import { Server } from "../server.ts";
 
 export interface DevOptions {
@@ -11,7 +11,7 @@ export const devHandler = async (options: DevOptions) => {
   const src = Deno.cwd();
   await runMod(src);
 
-  const server = new Server({ base: path.join(Deno.cwd(), options.base) });
+  const server = new Server({ base: options.base });
   server.listen({ port: options.port });
   const serverUrl = `http://localhost:${options.port}`;
   console.log(
