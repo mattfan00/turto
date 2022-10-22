@@ -1,5 +1,5 @@
 import { Buffer, copy, fs, gunzip, path, Untar } from "../../deps.ts";
-import { isUrl, styles, trimPrefix } from "../utils.ts";
+import { getFileInfo, isUrl, styles, trimPrefix } from "../utils.ts";
 
 interface InitOptions {
   template: string;
@@ -7,6 +7,7 @@ interface InitOptions {
 
 const REPO_OWNER = "mattfan00";
 const REPO_NAME = "turto";
+const DENO_MODULE_NAME = "turto";
 
 export const initHandler = async (
   dirname: string | undefined,
@@ -50,7 +51,7 @@ export const initHandler = async (
     // uncompress tar.gz file to get tar file
     const tarData = gunzip(new Uint8Array(body));
     const untar = new Untar(new Buffer(tarData));
-    console.log("\nSuccessfully downloaded template\n");
+    console.log(`\nSuccessfully downloaded template "${options.template}"\n`);
 
     const prefix = `turto-main/templates/${options.template}`;
 
@@ -69,6 +70,23 @@ export const initHandler = async (
         file.close();
       }
     }
+
+    // generate default mod.ts file if template doesn't come with it
+    const modPath = path.join(baseDir, "./mod.ts");
+    if (!getFileInfo(modPath)) {
+      const turtoImport = import.meta.resolve("../../mod.ts")
+      let modStr = `import { turto } from "${turtoImport}"\n\n`;
+      modStr += "const site = turto()\n\n";
+      modStr += "site\n";
+      modStr += "\t.load()\n";
+      modStr += "\t.render()\n";
+      modStr += "\t.build()\n";
+
+      Deno.writeTextFileSync(modPath, modStr);
+      console.log(`Created default mod.ts file ${styles.file(modPath)}`);
+    }
+
+    console.log("\nSuccess!");
   } else {
     // TODO: add in remote templates
     throw new Error(
@@ -85,7 +103,9 @@ const getOfficialTemplates = async () => {
     throw new Error(`Error fetching from ${styles.link(repoUrl)}`);
   }
 
-  const json = await res.json() as { name: string }[];
-  const officialTemplateNames = json.map((template) => template.name);
+  const json = await res.json() as { name: string; type: string }[];
+  const officialTemplateNames = json
+    .filter((template) => template.type === "dir")
+    .map((template) => template.name);
   return officialTemplateNames;
 };
