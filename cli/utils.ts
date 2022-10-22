@@ -41,8 +41,8 @@ export const trimPath = (p: string) => {
     newPath = newPath.slice(newPath.indexOf("/") + 1);
   }
 
-  return newPath
-}
+  return newPath;
+};
 
 export const optionParseInt = (value: string, _previous: number) => {
   const parsedValue = parseInt(value, 10);

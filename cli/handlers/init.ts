@@ -5,6 +5,9 @@ interface InitOptions {
   template: string;
 }
 
+const REPO_OWNER = "mattfan00";
+const REPO_NAME = "turto";
+
 export const initHandler = async (
   dirname: string | undefined,
   options: InitOptions,
@@ -25,12 +28,22 @@ export const initHandler = async (
     }
   }
 
-  const baseDir = path.join(Deno.cwd(), dirname || "");
+  const baseDir = path.resolve(dirname || "");
   console.log(`Creating a new turto project in ${styles.file(baseDir)}`);
 
   if (!isUrl(options.template)) {
+    const templates = await getOfficialTemplates();
+    if (!templates.includes(options.template)) {
+      const templatesStr = templates
+        .map((template) => `"${template}"`)
+        .join(", ");
+      throw new Error(
+        `"${options.template}" is an invalid template, please choose from the following: ${templatesStr}`,
+      );
+    }
+
     const downloadUrl =
-      "https://codeload.github.com/mattfan00/turto/tar.gz/main";
+      `https://codeload.github.com/${REPO_OWNER}/${REPO_NAME}/tar.gz/main`;
     const res = await fetch(downloadUrl);
 
     const body = await res.arrayBuffer();
@@ -42,6 +55,7 @@ export const initHandler = async (
     const prefix = `turto-main/templates/${options.template}`;
 
     await fs.ensureDir(baseDir);
+
     for await (const entry of untar) {
       if (entry.fileName.startsWith(prefix)) {
         const destPath = path.join(baseDir, trimPrefix(entry.fileName, prefix));
@@ -55,9 +69,23 @@ export const initHandler = async (
         file.close();
       }
     }
+  } else {
+    // TODO: add in remote templates
+    throw new Error(
+      "Remote templates are not available right now, please provide an official template name",
+    );
+  }
+};
+
+const getOfficialTemplates = async () => {
+  const repoUrl =
+    `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/templates`;
+  const res = await fetch(repoUrl);
+  if (res.status !== 200) {
+    throw new Error(`Error fetching from ${styles.link(repoUrl)}`);
   }
 
-  console.log("\nSuccess!");
-
-  // TODO: add in remote templates
+  const json = await res.json() as { name: string }[];
+  const officialTemplateNames = json.map((template) => template.name);
+  return officialTemplateNames;
 };
