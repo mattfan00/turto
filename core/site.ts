@@ -106,8 +106,6 @@ export class Site {
 
       this.renderer.compile(p, content);
     });
-
-    return this;
   }
 
   readPage(pathRelative: string): Page {
@@ -218,8 +216,6 @@ export class Site {
         page: page,
       });
     });
-
-    return this;
   }
 
   // deno-lint-ignore ban-types
@@ -275,9 +271,12 @@ export class Site {
     });
   }
 
-  build() {
+  init() {
     fs.emptyDirSync(this.getDest());
+  }
 
+  build() {
+    this.init();
     this.read();
     this.render();
     this.processPlugins();
