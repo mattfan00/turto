@@ -37,7 +37,7 @@ export class Renderer {
     // deno-lint-ignore ban-types
     data: object,
   ) {
-    return nunjucks.renderString(content, data);
+    return this.engine.renderString(content, data);
   }
 }
 
