@@ -5,6 +5,7 @@ import {
   marked,
   micromatch,
   MicromatchOptions,
+  nunjucks,
   path,
 } from "../deps.ts";
 import { appendName, listDirs, readDirRecursive } from "./utils/file.ts";
@@ -25,7 +26,7 @@ export class Site {
   constructor(options?: Partial<SiteOptions>) {
     this.options = { ...defaultSiteOptions, ...options };
 
-    this.renderer = new Renderer();
+    this.renderer = new Renderer(this.options.renderer);
   }
 
   addLayoutFilter(
@@ -74,7 +75,7 @@ export class Site {
         !micromatch.isMatch(
           p,
           this.options.ignore,
-          this.options.micromatchOptions,
+          this.options.micromatch,
         ) &&
         !p.startsWith(this.getLayoutsDir())
       );
@@ -175,7 +176,7 @@ export class Site {
         ? micromatch.isMatch(
           pathRelative,
           this.options.readAssetContent,
-          this.options.micromatchOptions,
+          this.options.micromatch,
         )
         : false;
     }
@@ -302,7 +303,9 @@ export interface SiteOptions {
   /** Specifies which assets to read the content for */
   readAssetContent: string[];
   /** Options for when `micromatch` is used */
-  micromatchOptions: MicromatchOptions;
+  micromatch: MicromatchOptions;
+  /** Options for renderer, currently only uses nunjucks options */
+  renderer: nunjucks.ConfigureOptions;
 }
 
 const defaultSiteOptions: SiteOptions = {
@@ -313,9 +316,10 @@ const defaultSiteOptions: SiteOptions = {
   prettyPaths: true,
   ignore: [],
   readAssetContent: [],
-  micromatchOptions: {
+  micromatch: {
     basename: true,
   },
+  renderer: {},
 };
 
 export const pageExtensions = [

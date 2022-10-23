@@ -4,8 +4,8 @@ export class Renderer {
   engine: nunjucks.Environment;
   cache: Map<string, nunjucks.Template>;
 
-  constructor() {
-    this.engine = nunjucks.configure({ autoescape: false });
+  constructor(options: nunjucks.ConfigureOptions) {
+    this.engine = nunjucks.configure(options);
     this.cache = new Map();
 
     this.engine.addFilter("formatdate", formatDate);
