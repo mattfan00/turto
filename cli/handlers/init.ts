@@ -76,10 +76,7 @@ export const initHandler = async (
       const turtoImport = import.meta.resolve("../../mod.ts");
       let modStr = `import { turto } from "${turtoImport}"\n\n`;
       modStr += "const site = turto()\n\n";
-      modStr += "site\n";
-      modStr += "\t.load()\n";
-      modStr += "\t.render()\n";
-      modStr += "\t.build()\n";
+      modStr += "site.build\n";
 
       Deno.writeTextFileSync(modPath, modStr);
       console.log(`Created default mod.ts file ${styles.file(modPath)}`);

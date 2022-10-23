@@ -7,11 +7,10 @@ import {
   MicromatchOptions,
   path,
 } from "../deps.ts";
-import { appendName, listDirs } from "./utils/file.ts";
+import { appendName, listDirs, readDirRecursive } from "./utils/file.ts";
 import { Object } from "./utils/types.ts";
 import { Asset, BaseFile, Page, PageFrontmatter } from "./entities.ts";
 import { Renderer } from "./renderer.ts";
-import * as plugins from "./plugins.ts";
 
 export class Site {
   options: SiteOptions;
@@ -68,12 +67,46 @@ export class Site {
     return this;
   }
 
-  load() {
-    return this.use(plugins.load);
-  }
+  read() {
+    // TODO: better way of filtering out _site and _layouts dirs
+    const paths = readDirRecursive(this.getSrc())
+      .filter((p) =>
+        !micromatch.isMatch(
+          p,
+          this.options.ignore,
+          this.options.micromatchOptions,
+        ) &&
+        !p.startsWith(this.getLayoutsDir())
+      );
 
-  render() {
-    return this.use(plugins.render);
+    paths.forEach((p) => {
+      // Ignore "." files
+      if (path.basename(p).startsWith(".")) {
+        return;
+      }
+
+      if (pageExtensions.includes(path.extname(p))) {
+        const newPage = this.readPage(p);
+        this.pages.push(newPage);
+      } else {
+        const newAsset = this.readAsset(p);
+        this.assets.push(newAsset);
+      }
+    });
+
+    const layoutPaths = readDirRecursive(
+      path.join(this.getSrc(), this.getLayoutsDir()),
+    );
+
+    layoutPaths.forEach((p) => {
+      const content = Deno.readTextFileSync(
+        path.join(this.getBase(), this.options.layouts, p),
+      );
+
+      this.renderer.compile(p, content);
+    });
+
+    return this;
   }
 
   readPage(pathRelative: string): Page {
@@ -169,38 +202,85 @@ export class Site {
     };
   }
 
-  build() {
-    fs.emptyDirSync(this.getDest());
+  render() {
+    const baseData = {
+      ...this.data,
+      site: {
+        pages: this.pages,
+        assets: this.assets,
+      },
+    };
 
+    this.pages.forEach((page) => {
+      this.renderPage(page, {
+        ...baseData,
+        page: page,
+      });
+    });
+
+    return this;
+  }
+
+  // deno-lint-ignore ban-types
+  renderPage(page: Page, data: object) {
+    // first render only the contents of the file
+    page.content = this.renderer.runOnDemand(page.content, data);
+
+    // if in a layout, then render with the layout
+    if (page.layout) {
+      page.content = this.renderer.run(page.layout, data);
+    }
+  }
+
+  processPlugins() {
     this.#plugins.forEach(async (plugin) => {
       await plugin(this);
     });
+  }
 
+  write() {
     this.pages.forEach((page) => {
-      this.#makeDir(page.dest);
-
-      Deno.writeTextFileSync(
-        path.join(this.getDest(), page.dest),
-        page.content,
-      );
+      this.writePage(page);
     });
 
     this.assets.forEach((asset) => {
-      this.#makeDir(asset.dest);
-
-      const dest = path.join(this.getDest(), asset.dest);
-      if (asset.content !== undefined) {
-        Deno.writeFileSync(dest, asset.content);
-      } else {
-        Deno.copyFileSync(path.join(this.getSrc(), asset.src), dest);
-      }
+      this.writeAsset(asset);
     });
+  }
+
+  writePage(page: Page) {
+    this.#makeDir(page.dest);
+
+    Deno.writeTextFileSync(
+      path.join(this.getDest(), page.dest),
+      page.content,
+    );
+  }
+
+  writeAsset(asset: Asset) {
+    this.#makeDir(asset.dest);
+
+    const dest = path.join(this.getDest(), asset.dest);
+    if (asset.content !== undefined) {
+      Deno.writeFileSync(dest, asset.content);
+    } else {
+      Deno.copyFileSync(path.join(this.getSrc(), asset.src), dest);
+    }
   }
 
   #makeDir(dest: string) {
     Deno.mkdirSync(path.join(this.getDest(), path.dirname(dest)), {
       recursive: true,
     });
+  }
+
+  build() {
+    fs.emptyDirSync(this.getDest());
+
+    this.read();
+    this.render();
+    this.processPlugins();
+    this.write();
   }
 }
 
