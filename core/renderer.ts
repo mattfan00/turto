@@ -30,6 +30,15 @@ export class Renderer {
 
     return template.render(data);
   }
+
+  /** run without using compiled template */
+  runOnDemand(
+    content: string,
+    // deno-lint-ignore ban-types
+    data: object,
+  ) {
+    return nunjucks.renderString(content, data);
+  }
 }
 
 const formatDate = (date: dayjs.Dayjs, formatStr: string) => {

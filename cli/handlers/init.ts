@@ -7,7 +7,6 @@ interface InitOptions {
 
 const REPO_OWNER = "mattfan00";
 const REPO_NAME = "turto";
-const DENO_MODULE_NAME = "turto";
 
 export const initHandler = async (
   dirname: string | undefined,
@@ -74,7 +73,7 @@ export const initHandler = async (
     // generate default mod.ts file if template doesn't come with it
     const modPath = path.join(baseDir, "./mod.ts");
     if (!getFileInfo(modPath)) {
-      const turtoImport = import.meta.resolve("../../mod.ts")
+      const turtoImport = import.meta.resolve("../../mod.ts");
       let modStr = `import { turto } from "${turtoImport}"\n\n`;
       modStr += "const site = turto()\n\n";
       modStr += "site\n";

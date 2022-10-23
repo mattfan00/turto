@@ -77,6 +77,10 @@ export class Site {
   }
 
   readPage(pathRelative: string): Page {
+    if (!pageExtensions.includes(path.extname(pathRelative))) {
+      throw new Error(`Page must use a valid extension`);
+    }
+
     const baseFile = this.#readBaseFile(pathRelative);
     const fileContent = Deno.readTextFileSync(
       path.join(this.getBase(), pathRelative),
@@ -100,9 +104,11 @@ export class Site {
       ...attrs
     } = pageData;
 
-    const content = marked.parse(body);
+    const { dir, name, ext } = path.parse(pathRelative);
 
-    const { dir, name } = path.parse(pathRelative);
+    // if contents is markdown, then convert it to HTML
+    const content = ext === ".md" ? marked.parse(body) : body;
+
     let dest: string;
     let genPath: string;
     if (this.options.prettyPaths) {
@@ -231,3 +237,9 @@ const defaultSiteOptions: SiteOptions = {
     basename: true,
   },
 };
+
+export const pageExtensions = [
+  ".md",
+  ".html",
+  ".njk",
+];

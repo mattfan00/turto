@@ -1,7 +1,8 @@
-import { Site } from "./site.ts";
+import { pageExtensions, Site } from "./site.ts";
 import { readDirRecursive } from "./utils/file.ts";
 import { micromatch, path } from "../deps.ts";
 
+// TODO: move load and render into site, no longer a plugin, and will used in `build`
 export const load = (site: Site) => {
   const paths = readDirRecursive(site.getSrc())
     .filter((p) =>
@@ -19,9 +20,7 @@ export const load = (site: Site) => {
       return;
     }
 
-    const ext = path.extname(p);
-
-    if (ext === ".md") {
+    if (pageExtensions.includes(path.extname(p))) {
       const newPage = site.readPage(p);
       site.pages.push(newPage);
     } else {
@@ -44,17 +43,27 @@ export const load = (site: Site) => {
 };
 
 export const render = (site: Site) => {
+  const baseData = {
+    ...site.data,
+    site: {
+      pages: site.pages,
+      assets: site.assets,
+    },
+  };
+
   site.pages.forEach((page) => {
+    // TODO: create a renderPage method in Site
+    const data = { ...baseData, page: page };
+
+    // first render only the contents of the file
+    page.content = site.renderer.runOnDemand(page.content, data);
+
+    // if in a layout, then render with the layout
     if (page.layout) {
-      const generatedHtml = site.renderer.run(page.layout, {
+      page.content = site.renderer.run(page.layout, {
         ...site.data,
-        site: {
-          pages: site.pages,
-          assets: site.assets,
-        },
         page: page,
       });
-      page.content = generatedHtml;
     }
   });
 };
