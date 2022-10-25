@@ -5,13 +5,12 @@ import {
   marked,
   micromatch,
   MicromatchOptions,
-  nunjucks,
   path,
 } from "../deps.ts";
 import { appendName, listDirs, readDirRecursive } from "./utils/file.ts";
 import { Object } from "./utils/types.ts";
 import { Asset, BaseFile, Page, PageFrontmatter } from "./entities.ts";
-import { Renderer } from "./renderer.ts";
+import { NunjucksConfigureOptions, Renderer } from "./renderer.ts";
 
 export class Site {
   options: SiteOptions;
@@ -26,7 +25,7 @@ export class Site {
   constructor(options?: Partial<SiteOptions>) {
     this.options = { ...defaultSiteOptions, ...options };
 
-    this.renderer = new Renderer(this.options.renderer);
+    this.renderer = new Renderer(this.options.layouts, this.options.renderer);
   }
 
   addLayoutFilter(
@@ -52,10 +51,6 @@ export class Site {
 
   getLayoutsDir() {
     return path.normalize(this.options.layouts);
-  }
-
-  get layouts() {
-    return [...this.renderer.cache.keys()];
   }
 
   setData(data: Object) {
@@ -295,6 +290,8 @@ export interface SiteOptions {
   dest: string;
   /** Directory relative to `src` where layouts are located */
   layouts: string;
+  /** Options for renderer, currently only uses nunjucks options */
+  renderer: NunjucksConfigureOptions;
   /** Convert "dir/hello.html" to "dir/hello/index.html" */
   prettyPaths: boolean;
   /** Ignore files when using `load`, uses `micromatch` */
@@ -303,8 +300,6 @@ export interface SiteOptions {
   readAssetContent: string[];
   /** Options for when `micromatch` is used */
   micromatch: MicromatchOptions;
-  /** Options for renderer, currently only uses nunjucks options */
-  renderer: nunjucks.ConfigureOptions;
 }
 
 const defaultSiteOptions: SiteOptions = {
@@ -312,13 +307,13 @@ const defaultSiteOptions: SiteOptions = {
   src: "./",
   dest: "./_site",
   layouts: "_layouts",
+  renderer: {},
   prettyPaths: true,
   ignore: [],
   readAssetContent: [],
   micromatch: {
     basename: true,
   },
-  renderer: {},
 };
 
 export const pageExtensions = [

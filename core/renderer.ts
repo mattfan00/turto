@@ -1,11 +1,19 @@
-import { dayjs, nunjucks } from "../deps.ts";
+import {
+  dayjs,
+  nunjucks,
+  NunjucksEnvironment,
+  NunjucksTemplate,
+} from "../deps.ts";
 
 export class Renderer {
-  engine: nunjucks.Environment;
-  cache: Map<string, nunjucks.Template>;
+  engine: NunjucksEnvironment;
+  cache: Map<string, NunjucksTemplate>;
 
-  constructor(options: nunjucks.ConfigureOptions) {
-    this.engine = nunjucks.configure(options);
+  constructor(src: string, options: NunjucksConfigureOptions) {
+    this.engine = new nunjucks.Environment(
+      new nunjucks.FileSystemLoader(src),
+      options,
+    );
     this.cache = new Map();
 
     this.engine.addFilter("formatdate", formatDate);
@@ -44,3 +52,20 @@ export class Renderer {
 const formatDate = (date: dayjs.Dayjs, formatStr: string) => {
   return date.format(formatStr);
 };
+
+export interface NunjucksConfigureOptions {
+  autoescape?: boolean;
+  throwOnUndefined?: boolean;
+  trimBlocks?: boolean;
+  lstripBlocks?: boolean;
+  watch?: boolean;
+  noCache?: boolean;
+  tags?: {
+    blockStart?: string;
+    blockEnd?: string;
+    variableStart?: string;
+    variableEnd?: string;
+    commentStart?: string;
+    commentEnd?: string;
+  };
+}
