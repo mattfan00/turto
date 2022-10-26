@@ -36,7 +36,7 @@ export class Site {
       `${this.options.dest}/**`,
     );
 
-    this.renderer = new Renderer(this.options.layouts, this.options.renderer);
+    this.renderer = new Renderer(this.getLayouts(), this.options.renderer);
   }
 
   #normalizeOptions() {
@@ -54,16 +54,16 @@ export class Site {
     this.renderer.engine.addFilter(name, func, async);
   }
 
-  getBase() {
-    return this.options.base;
-  }
-
   getSrc() {
-    return path.join(this.options.base, this.options.src);
+    return path.resolve(this.options.src);
   }
 
   getDest() {
-    return path.join(this.options.base, this.options.dest);
+    return path.join(this.getSrc(), this.options.dest);
+  }
+
+  getLayouts() {
+    return path.join(this.getSrc(), this.options.layouts);
   }
 
   setData(data: Object) {
@@ -290,11 +290,9 @@ export class Site {
 export type Plugin = (site: Site) => Promise<void> | void;
 
 export interface SiteOptions {
-  /** Current working directory */
-  base: string;
-  /** Directory relative to `base` where files are located */
+  /** Source directory where all files are located */
   src: string;
-  /** Directory relative to `base` where site will be generated */
+  /** Directory relative to `src` where site will be generated */
   dest: string;
   /** Directory relative to `src` where layouts are located */
   layouts: string;
@@ -311,7 +309,6 @@ export interface SiteOptions {
 }
 
 const defaultSiteOptions: SiteOptions = {
-  base: Deno.cwd(),
   src: ".",
   dest: "_site",
   layouts: "_layouts",
@@ -319,9 +316,7 @@ const defaultSiteOptions: SiteOptions = {
   prettyPaths: true,
   ignore: [],
   readAssetContent: [],
-  micromatch: {
-    basename: true,
-  },
+  micromatch: {},
 };
 
 export const pageExtensions = [
