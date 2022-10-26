@@ -36,7 +36,7 @@ export class Renderer {
       throw new Error(`"${layoutName}" layout does not exist`);
     }
 
-    return template.render(data);
+    return template.render(data) as unknown as string;
   }
 
   /** run without using compiled template */
@@ -45,7 +45,7 @@ export class Renderer {
     // deno-lint-ignore ban-types
     data: object,
   ) {
-    return this.engine.renderString(content, data);
+    return this.engine.renderString(content, data) as unknown as string;
   }
 }
 
