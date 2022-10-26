@@ -58,3 +58,40 @@ export const trimPrefix = (s: string, prefix: string) => {
   }
   return s;
 };
+
+export type ValidateDirTypes = "absolute" | "previous" | "base";
+
+export const validateDir = (dir: string, types?: ValidateDirTypes[]) => {
+  if (!types) {
+    types = ["absolute", "previous", "base"];
+  }
+  const normalized = path.normalize(dir);
+  for (const type of types) {
+    if (type === "absolute") {
+      if (path.isAbsolute(dir)) {
+        throw new Error(`${dir} cannot be an absolute path`);
+      }
+    } else if (type === "previous") {
+      if (normalized.startsWith("../")) {
+        throw new Error(`${dir} cannot be a previous directory`);
+      }
+    } else if (type === "base") {
+      if (normalized === (".") || normalized === "./") {
+        throw new Error(`${dir} cannot be the base directory`);
+      }
+    }
+  }
+};
+
+export const normalizeDir = (dir: string) => {
+  let newPath = path.normalize(dir);
+  if (newPath.endsWith("/")) {
+    newPath = newPath.slice(0, newPath.length - 1);
+  }
+  const prefix = newPath.slice(0, newPath.indexOf("/"));
+  if (prefix === "." || prefix === "..") {
+    newPath = newPath.slice(newPath.indexOf("/") + 1);
+  }
+
+  return path.normalize(newPath);
+};

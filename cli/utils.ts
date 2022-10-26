@@ -31,19 +31,6 @@ export const trimPrefix = (s: string, prefix: string) => {
   return s;
 };
 
-export const trimPath = (p: string) => {
-  let newPath = path.normalize(p);
-  if (newPath.endsWith("/")) {
-    newPath = newPath.slice(0, newPath.length - 1);
-  }
-  const prefix = newPath.slice(0, newPath.indexOf("/"));
-  if (prefix === "." || prefix === "..") {
-    newPath = newPath.slice(newPath.indexOf("/") + 1);
-  }
-
-  return newPath;
-};
-
 export const optionParseInt = (value: string, _previous: number) => {
   const parsedValue = parseInt(value, 10);
   if (isNaN(parsedValue)) {

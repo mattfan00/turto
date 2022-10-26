@@ -7,7 +7,12 @@ import {
   MicromatchOptions,
   path,
 } from "../deps.ts";
-import { appendName, listDirs, readDirRecursive } from "./utils/file.ts";
+import {
+  appendName,
+  listDirs,
+  normalizeDir,
+  readDirRecursive,
+} from "./utils/file.ts";
 import { Object } from "./utils/types.ts";
 import { Asset, BaseFile, Page, PageFrontmatter } from "./entities.ts";
 import { NunjucksConfigureOptions, Renderer } from "./renderer.ts";
@@ -24,8 +29,20 @@ export class Site {
 
   constructor(options?: Partial<SiteOptions>) {
     this.options = { ...defaultSiteOptions, ...options };
+    this.#normalizeOptions();
+
+    this.options.ignore.push(
+      `${this.options.layouts}/**`,
+      `${this.options.dest}/**`,
+    );
 
     this.renderer = new Renderer(this.options.layouts, this.options.renderer);
+  }
+
+  #normalizeOptions() {
+    this.options.src = normalizeDir(this.options.src);
+    this.options.dest = normalizeDir(this.options.dest);
+    this.options.layouts = normalizeDir(this.options.layouts);
   }
 
   addLayoutFilter(
@@ -49,10 +66,6 @@ export class Site {
     return path.join(this.options.base, this.options.dest);
   }
 
-  getLayoutsDir() {
-    return path.normalize(this.options.layouts);
-  }
-
   setData(data: Object) {
     this.data = data;
     return this;
@@ -64,20 +77,15 @@ export class Site {
   }
 
   read() {
-    // TODO: better way of filtering out _site and _layouts dirs
-    const paths = readDirRecursive(this.getSrc())
-      .filter((p) =>
-        !micromatch.isMatch(
-          p,
-          this.options.ignore,
-          this.options.micromatch,
-        ) &&
-        !p.startsWith(this.getLayoutsDir())
-      );
+    const paths = readDirRecursive(this.getSrc());
 
     paths.forEach((p) => {
       // Ignore "." files
       if (path.basename(p).startsWith(".")) {
+        return;
+      }
+
+      if (micromatch.isMatch(p, this.options.ignore, this.options.micromatch)) {
         return;
       }
 
@@ -91,12 +99,12 @@ export class Site {
     });
 
     const layoutPaths = readDirRecursive(
-      path.join(this.getSrc(), this.getLayoutsDir()),
+      path.join(this.getSrc(), this.options.layouts),
     );
 
     layoutPaths.forEach((p) => {
       const content = Deno.readTextFileSync(
-        path.join(this.getBase(), this.options.layouts, p),
+        path.join(this.getSrc(), this.options.layouts, p),
       );
 
       this.renderer.compile(p, content);
@@ -110,7 +118,7 @@ export class Site {
 
     const baseFile = this.#readBaseFile(pathRelative);
     const fileContent = Deno.readTextFileSync(
-      path.join(this.getBase(), pathRelative),
+      path.join(this.getSrc(), pathRelative),
     );
 
     let pageData = {} as Partial<PageFrontmatter>;
@@ -175,7 +183,7 @@ export class Site {
     }
     const baseFile = this.#readBaseFile(pathRelative);
     const content = getContent
-      ? Deno.readFileSync(path.join(this.getBase(), pathRelative))
+      ? Deno.readFileSync(path.join(this.getSrc(), pathRelative))
       : undefined;
 
     const asset: Asset = {
@@ -187,7 +195,7 @@ export class Site {
   }
 
   #readBaseFile(pathRelative: string): BaseFile {
-    const stat = Deno.statSync(path.join(this.getBase(), pathRelative));
+    const stat = Deno.statSync(path.join(this.getSrc(), pathRelative));
     return {
       src: pathRelative,
       dest: pathRelative,
@@ -304,8 +312,8 @@ export interface SiteOptions {
 
 const defaultSiteOptions: SiteOptions = {
   base: Deno.cwd(),
-  src: "./",
-  dest: "./_site",
+  src: ".",
+  dest: "_site",
   layouts: "_layouts",
   renderer: {},
   prettyPaths: true,

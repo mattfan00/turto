@@ -42,6 +42,7 @@ try {
   if (error instanceof CliError) {
     turtoProgram.error(error.message, error.errorOptions);
   } else if (error instanceof Error) {
+    console.log("there was an error here ==================");
     turtoProgram.error(error.message);
   }
 }

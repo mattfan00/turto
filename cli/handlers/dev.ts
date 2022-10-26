@@ -1,6 +1,7 @@
-import { runMod, styles, trimPath } from "../utils.ts";
+import { runMod, styles } from "../utils.ts";
 import { Watcher } from "../../deps.ts";
 import { Server } from "../server.ts";
+import { normalizeDir } from "../../core/utils/file.ts";
 
 export interface DevOptions {
   port: number;
@@ -19,7 +20,7 @@ export const devHandler = async (options: DevOptions) => {
   );
 
   const watcher = new Watcher(src, {
-    ignore: `**/${trimPath(options.base)}/**`,
+    ignore: `**/${normalizeDir(options.base)}/**`,
   });
   console.log(
     `Started watching for changes in ${styles.file(src)}\n`,
