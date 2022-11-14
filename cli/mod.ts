@@ -5,16 +5,16 @@ import { initHandler } from "./handlers/init.ts";
 import { buildHandler } from "./handlers/build.ts";
 import { devHandler } from "./handlers/dev.ts";
 
-const turtoProgram = new commander.Command();
+const program = new commander.Command();
 
-turtoProgram
+program
   .name("turto")
   .description("The turto static site generator")
   .configureOutput({
     outputError: (str, write) => write(`${styles.error("[error]")} ${str}`),
   });
 
-turtoProgram.command("init")
+program.command("init")
   .description("Create a new turto project")
   .argument("[dirname]", "directory to create project in")
   .option(
@@ -24,11 +24,11 @@ turtoProgram.command("init")
   )
   .action(initHandler);
 
-turtoProgram.command("build")
+program.command("build")
   .description("Build your site")
   .action(buildHandler);
 
-turtoProgram.command("dev")
+program.command("dev")
   .description(
     "Build your application in development mode (file watcher, server, etc.)",
   )
@@ -36,13 +36,14 @@ turtoProgram.command("dev")
   .option("-b, --base <base>", "base directory to serve files from", "_site")
   .action(devHandler);
 
-try {
-  await turtoProgram.parseAsync();
-} catch (error) {
-  if (error instanceof CliError) {
-    turtoProgram.error(error.message, error.errorOptions);
-  } else if (error instanceof Error) {
-    console.log("there was an error here ==================");
-    turtoProgram.error(error.message);
+export const start = async () => {
+  try {
+    await program.parseAsync();
+  } catch (error) {
+    if (error instanceof CliError) {
+      program.error(error.message, error.errorOptions);
+    } else if (error instanceof Error) {
+      program.error(error.message);
+    }
   }
-}
+};
