@@ -1,4 +1,4 @@
-import { path } from "../../deps.ts";
+import { micromatch, MicromatchOptions, path } from "../../deps.ts";
 
 /**
  * Synchronously reads the directory in `rootDir` and returns a
@@ -13,16 +13,22 @@ import { path } from "../../deps.ts";
  */
 export const readDirRecursive = (
   rootDir: string,
+  ignore?: string[],
+  ignoreOptions?: MicromatchOptions,
   subDir = "./",
   files: string[] = [],
 ) => {
   const currentDir = path.join(rootDir, subDir);
   for (const dirEntry of Deno.readDirSync(currentDir)) {
     const relPath = path.join(subDir, dirEntry.name);
+    if (ignore && micromatch.isMatch(relPath, ignore, ignoreOptions)) {
+      continue;
+    }
+
     if (dirEntry.isFile) {
       files.push(relPath);
     } else {
-      readDirRecursive(rootDir, relPath, files);
+      readDirRecursive(rootDir, ignore, ignoreOptions, relPath, files);
     }
   }
 

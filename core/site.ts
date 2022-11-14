@@ -32,8 +32,9 @@ export class Site {
     this.#normalizeOptions();
 
     this.options.ignore.push(
-      `${this.options.layouts}/**`,
-      `${this.options.dest}/**`,
+      this.options.layouts,
+      this.options.dest,
+      `**/*.ts`,
     );
 
     this.renderer = new Renderer(this.getLayouts(), this.options.renderer);
@@ -77,15 +78,15 @@ export class Site {
   }
 
   read() {
-    const paths = readDirRecursive(this.getSrc());
+    const paths = readDirRecursive(
+      this.getSrc(),
+      this.options.ignore,
+      this.options.micromatch,
+    );
 
     paths.forEach((p) => {
       // Ignore "." files
       if (path.basename(p).startsWith(".")) {
-        return;
-      }
-
-      if (micromatch.isMatch(p, this.options.ignore, this.options.micromatch)) {
         return;
       }
 
